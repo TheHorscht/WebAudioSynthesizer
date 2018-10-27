@@ -1,8 +1,8 @@
 <template>
   <div id="app">
+    <knob :size="50"/>
     <knob :size="75"/>
-    <knob :size="100"/>
-    <knob :size="125"/>
+    <knob :size="100" />
   </div>
 </template>
 
@@ -15,13 +15,9 @@ export default {
     knob
   },
   data: () => ({
-
   }),
 }
 </script>
 
 <style lang="scss">
-Knob {
-
-}
 </style>
