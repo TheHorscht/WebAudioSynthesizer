@@ -63,7 +63,7 @@ export default {
     },
     pointerMove (e) {
       if (e.target.hasPointerCapture(e.pointerId)) {
-        this.value -= e.movementY
+        this.value -= e.movementY * 0.5;
       }
     },
   },
