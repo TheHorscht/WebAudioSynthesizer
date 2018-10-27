@@ -1,16 +1,18 @@
 <template>
   <div id="app">
-    <Knob/>
+    <knob size="75"/>
+    <knob size="100"/>
+    <knob size="125"/>
   </div>
 </template>
 
 <script>
-import Knob from './components/Knob'
+import knob from './components/knob'
 
 export default {
   name: 'app',
   components: {
-    Knob
+    knob
   },
   data: () => ({
 
@@ -19,5 +21,7 @@ export default {
 </script>
 
 <style lang="scss">
+Knob {
 
+}
 </style>
