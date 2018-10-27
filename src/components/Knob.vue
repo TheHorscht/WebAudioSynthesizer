@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="container">
     <svg :width="size" :height="size" viewBox="0 0 100 100"
           version="1.1" xmlns="http://www.w3.org/2000/svg">
       <g @pointerdown.stop="pointerDown"
@@ -87,14 +87,18 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+.container {
+  display: inline-block;
+  margin: 3px;
+}
 svg {
-   user-select: none;
-   overflow: visible;
-   line {
-     stroke:white;
-     stroke-width: 5;
-     pointer-events: none;
-     stroke-linecap: round;
-   }
+  user-select: none;
+  overflow: visible;
+  line {
+    stroke:white;
+    stroke-width: 5;
+    pointer-events: none;
+    stroke-linecap: round;
+  }
 }
 </style>
