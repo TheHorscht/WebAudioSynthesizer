@@ -4,8 +4,7 @@
           version="1.1" xmlns="http://www.w3.org/2000/svg">
       <g @pointerdown.stop="pointerDown"
          @pointerup.stop="pointerUp"
-         @pointermove.stop="pointerMove"
-         filter="url(#shadow)">
+         @pointermove.stop="pointerMove">
         <circle cx="50" cy="50" r="50" fill="url(#gradient)" />
         <circle cx="50" cy="50" r="45" fill="url(#gradientReversed)" />
       </g>
@@ -20,9 +19,6 @@
         </linearGradient>
         <linearGradient id="gradientReversed" href="#gradient"
                         gradientTransform="rotate(180, 0.5, 0.5)"/>
-        <filter id="shadow" x="0" y="0" width="200%" height="200%">
-          <feDropShadow dx="2" dy="2" stdDeviation="2"/>
-        </filter>
       </defs>
     </svg>
   </div>
