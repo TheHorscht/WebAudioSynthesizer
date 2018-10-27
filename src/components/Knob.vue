@@ -50,11 +50,19 @@ export default {
     },
     value: {
       type: Number,
-      default: 50,
+      default: 0,
+    },
+    tickCount: {
+      type: Number,
+      default: 11,
     },
   },
   data: () => ({
+    currentValue: 0,
   }),
+  mounted() {
+    this.currentValue = this.value;
+  },
   methods: {
     pointerDown (e) {
       e.target.setPointerCapture(e.pointerId)
@@ -64,12 +72,13 @@ export default {
     },
     pointerMove (e) {
       if (e.target.hasPointerCapture(e.pointerId)) {
-        this.value -= e.movementY * 0.5;
+        const newValue = this.currentValue - e.movementY * 0.5;
+        this.currentValue = clamp(newValue, this.min, this.max);
       }
     },
   },
   computed: {
-    p: self => self.value / self.max,
+    p: self => self.currentValue / self.max,
     line () {
       const angle = deg2rad(180 + 45 + (this.p * 270) - 90)
       return {
@@ -81,9 +90,8 @@ export default {
     },
     ticks () {
       const ticks = [];
-      const tickCount = 3;
-      for(let i = 0; i < tickCount; i++) {
-        const p = i / (tickCount - 1);
+      for(let i = 0; i < this.tickCount; i++) {
+        const p = i / (this.tickCount - 1);
         const angle = deg2rad(180 + 45 + (p * 270) - 90)
         ticks.push({
           x1: 50 + Math.cos(angle) * 45,
@@ -96,8 +104,8 @@ export default {
     },
   },
   watch: {
-    value (newValue, oldValue) {
-      this.value = clamp(newValue, this.min, this.max)
+    currentValue (newValue, oldValue) {
+      this.$emit('input', newValue);
     }
   }
 }
@@ -118,6 +126,7 @@ svg {
   }
   .tickLine {
     stroke:black;
+    stroke-width: 3;
   }
 }
 </style>
