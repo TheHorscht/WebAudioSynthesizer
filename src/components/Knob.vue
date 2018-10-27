@@ -5,8 +5,8 @@
       <g @pointerdown.stop="pointerDown"
          @pointerup.stop="pointerUp"
          @pointermove.stop="pointerMove">
-        <circle cx="50" cy="50" r="50" fill="url(#gradient)" />
-        <circle cx="50" cy="50" r="45" fill="url(#gradientReversed)" />
+        <circle cx="50" cy="50" r="40" fill="url(#gradient)" />
+        <circle cx="50" cy="50" r="35" fill="url(#gradientReversed)" />
       </g>
       <g>
         <line v-for="(tick, i) in ticks" :key="i" class="tickLine"
@@ -75,8 +75,8 @@ export default {
       return {
         x1: 50 + Math.cos(angle) * 30,
         y1: 50 + Math.sin(angle) * 30,
-        x2: 50 + Math.cos(angle) * 50,
-        y2: 50 + Math.sin(angle) * 50,
+        x2: 50 + Math.cos(angle) * 35,
+        y2: 50 + Math.sin(angle) * 35,
       }
     },
     ticks () {
@@ -86,8 +86,8 @@ export default {
         const p = i / (tickCount - 1);
         const angle = deg2rad(180 + 45 + (p * 270) - 90)
         ticks.push({
-          x1: 50 + Math.cos(angle) * 40,
-          y1: 50 + Math.sin(angle) * 40,
+          x1: 50 + Math.cos(angle) * 45,
+          y1: 50 + Math.sin(angle) * 45,
           x2: 50 + Math.cos(angle) * 50,
           y2: 50 + Math.sin(angle) * 50,
         });
