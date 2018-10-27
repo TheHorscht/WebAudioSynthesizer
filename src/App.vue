@@ -1,8 +1,8 @@
 <template>
   <div id="app">
-    <knob size="75"/>
-    <knob size="100"/>
-    <knob size="125"/>
+    <knob :size="75"/>
+    <knob :size="100"/>
+    <knob :size="125"/>
   </div>
 </template>
 

@@ -8,6 +8,11 @@
         <circle cx="50" cy="50" r="50" fill="url(#gradient)" />
         <circle cx="50" cy="50" r="45" fill="url(#gradientReversed)" />
       </g>
+      <g>
+        <line v-for="(tick, i) in ticks" :key="i" class="tickLine"
+              :x1="tick.x1" :y1="tick.y1"
+              :x2="tick.x2" :y2="tick.y2" />
+      </g>
       <line :x1="line.x1" :y1="line.y1"
             :x2="line.x2" :y2="line.y2" />
 
@@ -64,6 +69,7 @@ export default {
     },
   },
   computed: {
+    p: self => self.value / self.max,
     line () {
       const angle = deg2rad(180 + 45 + (this.p * 270) - 90)
       return {
@@ -73,7 +79,21 @@ export default {
         y2: 50 + Math.sin(angle) * 50,
       }
     },
-    p: self => self.value / self.max,
+    ticks () {
+      const ticks = [];
+      const tickCount = 3;
+      for(let i = 0; i < tickCount; i++) {
+        const p = i / (tickCount - 1);
+        const angle = deg2rad(180 + 45 + (p * 270) - 90)
+        ticks.push({
+          x1: 50 + Math.cos(angle) * 40,
+          y1: 50 + Math.sin(angle) * 40,
+          x2: 50 + Math.cos(angle) * 50,
+          y2: 50 + Math.sin(angle) * 50,
+        });
+      }
+      return ticks;
+    },
   },
   watch: {
     value (newValue, oldValue) {
@@ -95,6 +115,9 @@ svg {
     stroke-width: 5;
     pointer-events: none;
     stroke-linecap: round;
+  }
+  .tickLine {
+    stroke:black;
   }
 }
 </style>
