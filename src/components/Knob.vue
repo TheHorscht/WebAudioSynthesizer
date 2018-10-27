@@ -33,7 +33,7 @@ import clamp from 'clamp'
 const deg2rad = deg => deg / 360 * Math.PI * 2
 
 export default {
-  name: 'Knob',
+  name: 'knob',
   props: {
     size: {
       type: Number,
