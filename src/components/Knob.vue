@@ -21,55 +21,48 @@
         <linearGradient id="gradientReversed" href="#gradient"
                         gradientTransform="rotate(180, 0.5, 0.5)"/>
         <filter id="shadow" x="0" y="0" width="200%" height="200%">
-          <feOffset result="offOut" in="SourceAlpha" dx="3" dy="3" />
-          <feGaussianBlur result="blurOut" in="offOut" stdDeviation="1" />
-          <feBlend in="SourceGraphic" in2="blurOut" mode="normal" />
+          <feDropShadow dx="2" dy="2" stdDeviation="2"/>
         </filter>
       </defs>
     </svg>
-    <span>{{ value }}</span>
   </div>
 </template>
 <script>
 import clamp from 'clamp'
 
 const deg2rad = deg => deg / 360 * Math.PI * 2
-window.d2r = deg2rad
 
 export default {
   name: 'Knob',
-  data: () => ({
-    size: 100,
-    min: 0,
-    max: 100,
-    value: 0,
-    dir: 1,
-  }),
-  mounted () {
-    // this.animate();
-  },
-  methods: {
-    animate () {
-      this.value += 1 * this.dir
-      if (this.value < this.min || this.value > this.max) {
-        this.dir *= -1
-      }
-      window.requestAnimationFrame(this.animate)
+  props: {
+    size: {
+      type: Number,
+      default: 50,
     },
+    min: {
+      type: Number,
+      default: 0,
+    },
+    max: {
+      type: Number,
+      default: 100,
+    },
+    value: {
+      type: Number,
+      default: 50,
+    },
+  },
+  data: () => ({
+  }),
+  methods: {
     pointerDown (e) {
       e.target.setPointerCapture(e.pointerId)
-      document.body.style = 'pointer-events: none'
     },
     pointerUp (e) {
       e.target.releasePointerCapture(e.pointerId)
-      document.body.style = 'pointer-events: initial'
     },
     pointerMove (e) {
       if (e.target.hasPointerCapture(e.pointerId)) {
-        if (e.stopPropagation) e.stopPropagation()
-        if (e.preventDefault) e.preventDefault()
-        e.cancelBubble = true
-        e.returnValue = false
         this.value -= e.movementY
       }
     },
