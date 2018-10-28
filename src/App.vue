@@ -3,12 +3,17 @@
     <knob :size="50"/>
     <knob :size="75"/>
     <knob :size="100" />
-    <div class="slider-container">
-      <vue-slider v-bind="sliderConfig.vertical"/>
-      <vue-slider v-bind="sliderConfig.vertical" ref="vert"/>
-      <vue-slider v-bind="sliderConfig.horizontal" />
+    <div class="ASDR-container">
+      <vue-slider v-bind="sliderConfig.verticalASDR" />
+      <vue-slider v-bind="sliderConfig.verticalASDR" />
+      <vue-slider v-bind="sliderConfig.verticalASDR" />
+      <vue-slider v-bind="sliderConfig.verticalASDR" />
+      <span>A</span>
+      <span>S</span>
+      <span>D</span>
+      <span>R</span>
     </div>
-  Boop
+    <vue-slider v-bind="sliderConfig.horizontal" />
   </div>
 </template>
 
@@ -27,17 +32,21 @@ export default {
     sliderConfig
   }),
   mounted () {
-    this.$nextTick(() => {
-      this.$refs.vert.refresh()
-    })
+    
   },
 }
 </script>
 
 <style lang="scss">
-.slider-container {
-  display: grid;
-  grid-template-columns: 20px 20px;
-  grid-template-rows: auto auto;
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+body {
+  user-select: none;
+}
+.ASDR-container {
+  display: inline-grid;
+  grid-template-columns: repeat(4, 25px);
+  grid-template-rows: auto 20px;
+  justify-items: center;
+  font-family: 'Roboto', sans-serif;
 }
 </style>

@@ -6,12 +6,14 @@ export default {
   horizontal: {
     ...common,
     width: 200,
-    height: 10
+    height: 5
   },
-  vertical: {
+  verticalASDR: {
     ...common,
     direction: 'vertical',
-    width: 10,
-    height: 200,
+    width: 5,
+    height: 100,
+    tooltip: 'hover',
+    'tooltip-dir': 'top',
   },
 }
