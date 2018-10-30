@@ -5,18 +5,19 @@
     <template v-for="i in 12">
       <rect x="0" :y="(i-1) * computedHeight / 12"
             width="65%" height="8.33%"
-            fill="black" :key="'template'+i" v-if="[2, 4, 7, 9, 11].includes(i)"/>
+            fill="black" :key="'template'+i" v-if="[2, 4, 6, 9, 11].includes(i)"/>
     </template>
   </svg>
   <svg width="100%" height="100%">
     <rect v-for="i in 4" :key="'bgrect' + i"
           :x="(i-1) * (1/4) * 100 + '%'" width="25%" 
           y="0" height="100%"
-          :fill="(i-1) % 2 == 0 ? 'grey' : 'lightgrey'" />
+          :class="(i-1) % 2 == 0 ? 'rect2' : 'rect3'" />
     <rect v-for="(note, i) in notes" :key="'note' + i"
           :x="Math.floor(i % 16) * (1 / 16) * 100 + '%'" :width="(1 / 16) * 100 + '%'"
           :y="Math.floor(i / 16) * (1 / 12) * 100 + '%'" :height="(1 / 12) * 100 + '%'"
-          :fill="note === 1 ? 'red' : 'transparent'" stroke="red" stroke-width="0.3"
+          :fill="note === 1 ? 'red' : 'transparent'" stroke-width="0.3"
+          class="rect"
           @click="click(i)" />
     <line v-if="playing"
           :x1="tickP * computedWidth" y1="0"
@@ -47,7 +48,7 @@ export default {
       computedHeight: 0,
     }),
     mounted() {
-      this.update();
+      //this.update();
       const child = this.$refs.container;
       const observer = new MutationObserver(mutations => {
         let newWidth = parseInt(window.getComputedStyle(child).width, 10);
@@ -88,5 +89,14 @@ div {
 }
 body {
   height: 100%;
+}
+.rect {
+  stroke: #3c3434;
+}
+.rect2 {
+  fill: #6d6966;
+}
+.rect3 {
+  fill: #635e5a;
 }
 </style>
