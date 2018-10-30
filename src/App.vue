@@ -14,12 +14,14 @@
       <span>R</span>
     </div>
     <vue-slider v-bind="sliderConfig.horizontal" />
+    <vue-sequencer />
   </div>
 </template>
 
 <script>
 import knob from './components/knob'
 import vueSlider from 'vue-slider-component'
+import vueSequencer from './components/sequencer'
 import sliderConfig from './slider-config'
 
 export default {
@@ -27,6 +29,7 @@ export default {
   components: {
     knob,
     vueSlider,
+    vueSequencer,
   },
   data: () => ({
     sliderConfig
