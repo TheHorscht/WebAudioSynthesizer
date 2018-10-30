@@ -13,12 +13,17 @@
           :x="(i-1) * (1/4) * 100 + '%'" width="25%" 
           y="0" height="100%"
           :class="(i-1) % 2 == 0 ? 'bg1' : 'bg2'" />
-    <rect v-for="(note, i) in notes" :key="'note' + i"
+    <rect v-for="(note, i) in 12*16" :key="'emptyrect' + i"
           :x="Math.floor(i % 16) * (1 / 16) * 100 + '%'" :width="(1 / 16) * 100 + '%'"
           :y="Math.floor(i / 16) * (1 / 12) * 100 + '%'" :height="(1 / 12) * 100 + '%'"
           stroke-width="0.3"
-          :class="note === 1 ? 'note note-placed' : 'note note-empty'"
-          @click="click(i)" />
+          class="note note-empty"
+          @mousedown="placenote(Math.floor(i % 16), Math.floor(i / 16))" />
+    <rect v-for="note in notes" :key="`note${note.pitch}-${note.startTick}`"
+          :x="(note.startTick / totalTicks_) * 100 + '%'" :width="(1 / 16) * 100 + '%'"
+          :y="note.pitch * (1 / 12) * 100 + '%'" :height="(1 / 12) * 100 + '%'"
+          stroke-width="0.3"
+          class="note note-placed" />
     <line v-if="playing"
           :x1="tickP * computedWidth" y1="0"
           :x2="tickP * computedWidth" y2="100%"
@@ -40,7 +45,7 @@ export default {
       },
     },
     data: () => ({
-      notes: Array(16*12).fill(0),
+      notes: [],
       position: 0,
       playing: true,
       totalTicks_: 16 * 16,
@@ -48,7 +53,7 @@ export default {
       computedHeight: 0,
     }),
     mounted() {
-      //this.update();
+      this.update();
       const child = this.$refs.container;
       const observer = new MutationObserver(mutations => {
         let newWidth = parseInt(window.getComputedStyle(child).width, 10);
@@ -64,10 +69,22 @@ export default {
       update() {
         this.position += 1;
         this.position %= this.totalTicks_;
+        this.notes.forEach(note => {
+          if(this.position == note.startTick) {
+            this.$emit('noteon', { pitch: note.pitch });
+            console.log('noteon: ', note.pitch);
+          }
+        });
         window.requestAnimationFrame(this.update);
       },
-      click(noteIndex) {
-        this.$set(this.notes, noteIndex, 1 - this.notes[noteIndex]);
+      placenote(x, y) {
+        console.log(x, y);
+        this.notes.push({
+          pitch: y,
+          startTick: x * 16,
+          endTick: x + 16,
+        });
+        //this.$set(this.notes, noteIndex, 1 - this.notes[noteIndex]);
       }
     },
     computed: {
@@ -82,8 +99,8 @@ div {
   resize: both;
   overflow: scroll;
   
-  min-width: 80px;
-  min-height: 80px;
+  min-width: 400px;
+  min-height: 200px;
   max-width: 800px;
   max-height: 800px;
 }
