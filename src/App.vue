@@ -14,7 +14,8 @@
       <span>R</span>
     </div>
     <vue-slider v-bind="sliderConfig.horizontal" />
-    <vue-sequencer />
+    <vue-sequencer ref="sequencer" @noteon="noteon" @noteoff="noteoff" />
+    <input type="button" value="Play/Pause" @click="togglePlaying">
   </div>
 </template>
 
@@ -24,6 +25,30 @@ import vueSlider from 'vue-slider-component'
 import vueSequencer from './components/sequencer'
 import sliderConfig from './slider-config'
 
+const audioCtx = new AudioContext();
+const gainNode = audioCtx.createGain();
+gainNode.connect(audioCtx.destination)
+gainNode.gain.value = 0.2;
+
+function playSound(freq) {
+  const oscillatorNode = audioCtx.createOscillator();
+  oscillatorNode.connect(gainNode);
+  oscillatorNode.type = 'sine';
+  oscillatorNode.frequency.value = freq;
+  oscillatorNode.start(audioCtx.currentTime);
+  oscillatorNode.stop(audioCtx.currentTime + 0.5);
+}
+
+const midiNoteToFrequency = (function() {
+	var midiNoteFrequencies = [];
+	for (var x = 0; x < 127; ++x) {
+	   midiNoteFrequencies[x] = (440 / 32) * (Math.pow(2, ((x - 9) / 12)));
+	}
+	return function(midiNoteNumber) {
+		return midiNoteFrequencies[midiNoteNumber];
+	}
+})();
+
 export default {
   name: 'app',
   components: {
@@ -32,11 +57,26 @@ export default {
     vueSequencer,
   },
   data: () => ({
-    sliderConfig
+    sliderConfig,
   }),
   mounted () {
     
   },
+  methods: {
+    noteon({ pitch }) {
+      playSound(midiNoteToFrequency(pitch));
+    },
+    noteoff({ pitch }) {
+      // stopSound(midiNoteToFrequency(pitch));
+    },
+    togglePlaying() {
+      if(this.$refs.sequencer.playing) {
+        this.$refs.sequencer.stop();
+      } else {
+        this.$refs.sequencer.resume();
+      } 
+    }
+  }
 }
 </script>
 

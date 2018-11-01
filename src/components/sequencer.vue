@@ -1,11 +1,14 @@
 <template>
-  <div ref="container" :width="width" :height="height">
+  <div ref="container" :style="{ width: width + 'px', height: height + 'px' }">
+  <!-- Keyboard -->
   <svg width="100%" height="100%">
+    <!-- White keys -->
     <rect x="0" y="0" width="100%" height="100%" fill="white" />
+    <!-- Black keys -->
     <template v-for="i in 12">
       <rect x="0" :y="(i-1) * computedHeight / 12"
             width="65%" height="8.33%"
-            fill="black" :key="'template'+i" v-if="[2, 4, 6, 9, 11].includes(i)"/>
+            fill="black" :key="'blackkey'+i" v-if="[2, 4, 6, 9, 11].includes(i)"/>
     </template>
   </svg>
   <svg width="100%" height="100%">
@@ -21,7 +24,7 @@
           @mousedown="placenote(Math.floor(i % 16), Math.floor(i / 16))" />
     <rect v-for="note in notes" :key="`note${note.pitch}-${note.startTick}`"
           :x="(note.startTick / totalTicks_) * 100 + '%'" :width="(1 / 16) * 100 + '%'"
-          :y="note.pitch * (1 / 12) * 100 + '%'" :height="(1 / 12) * 100 + '%'"
+          :y="(11 - (note.pitch - 48)) * (1 / 12) * 100 + '%'" :height="(1 / 12) * 100 + '%'"
           stroke-width="0.3"
           class="note note-placed" />
     <line v-if="playing"
@@ -37,59 +40,80 @@ export default {
     props: {
       width: {
         type: Number,
-        default: 400,
+        default: 800,
       },
       height: {
         type: Number,
-        default: 200,
+        default: 400,
       },
     },
     data: () => ({
       notes: [],
       position: 0,
-      playing: true,
+      playing: false,
       totalTicks_: 16 * 16,
       computedWidth: 0,
       computedHeight: 0,
     }),
     mounted() {
-      this.update();
       const child = this.$refs.container;
       const observer = new MutationObserver(mutations => {
+        calculateAndSetSize();
+      });
+
+      const calculateAndSetSize = () => {
         let newWidth = parseInt(window.getComputedStyle(child).width, 10);
         newWidth -= 100;
         let newHeight = parseInt(window.getComputedStyle(child).height, 10);
         this.computedWidth = newWidth;
         this.computedHeight = newHeight;
-      });
+        console.log(newWidth)
+      };
+      calculateAndSetSize();
 
       observer.observe(child, { attributes: true, attributeFilter: ['style'] });
+      this.update();
     },
     methods: {
       update() {
-        this.position += 1;
-        this.position %= this.totalTicks_;
-        this.notes.forEach(note => {
-          if(this.position == note.startTick) {
-            this.$emit('noteon', { pitch: note.pitch });
-            console.log('noteon: ', note.pitch);
-          }
-        });
+        if(this.playing) {
+          this.notes.forEach(note => {
+            if(this.position == note.startTick) {
+              this.$emit('noteon', { pitch: note.pitch });
+            }
+            if(this.position == note.endTick) {
+              this.$emit('noteoff', { pitch: note.pitch });
+            }
+          });
+          this.position += 1;
+          this.position %= this.totalTicks_;
+        }
         window.requestAnimationFrame(this.update);
       },
       placenote(x, y) {
-        console.log(x, y);
-        this.notes.push({
-          pitch: y,
-          startTick: x * 16,
-          endTick: x + 16,
-        });
-        //this.$set(this.notes, noteIndex, 1 - this.notes[noteIndex]);
-      }
+        const startTick = x * 16;
+        const endTick = startTick + 16;
+        const index = this.notes.findIndex(note => note.startTick === startTick);
+        if(index >= 0) {
+          this.notes.splice(index, 1);
+        } else {
+          this.notes.push({
+            pitch: 48 + (11 - y),
+            startTick, endTick,
+          });
+        }
+      },
+      stop() {
+        this.position = 0;
+        this.playing = false;
+      },
+      resume() {
+        this.playing = true;
+      },
     },
     computed: {
       tickP: self => self.position / self.totalTicks_,
-    }
+    },
 }
 </script>
 <style lang="scss" scoped>
@@ -112,6 +136,7 @@ body {
 }
 .note-placed {
   fill: #29365a;
+  pointer-events: none;
 }
 .note-empty {
   fill: transparent;
