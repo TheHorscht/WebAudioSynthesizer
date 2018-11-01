@@ -24,30 +24,10 @@ import knob from './components/knob'
 import vueSlider from 'vue-slider-component'
 import vueSequencer from './components/sequencer'
 import sliderConfig from './slider-config'
+import Voice from './voice'
 
 const audioCtx = new AudioContext();
-const gainNode = audioCtx.createGain();
-gainNode.connect(audioCtx.destination)
-gainNode.gain.value = 0.2;
-
-function playSound(freq) {
-  const oscillatorNode = audioCtx.createOscillator();
-  oscillatorNode.connect(gainNode);
-  oscillatorNode.type = 'sine';
-  oscillatorNode.frequency.value = freq;
-  oscillatorNode.start(audioCtx.currentTime);
-  oscillatorNode.stop(audioCtx.currentTime + 0.5);
-}
-
-const midiNoteToFrequency = (function() {
-	var midiNoteFrequencies = [];
-	for (var x = 0; x < 127; ++x) {
-	   midiNoteFrequencies[x] = (440 / 32) * (Math.pow(2, ((x - 9) / 12)));
-	}
-	return function(midiNoteNumber) {
-		return midiNoteFrequencies[midiNoteNumber];
-	}
-})();
+let voices = {};
 
 export default {
   name: 'app',
@@ -63,11 +43,18 @@ export default {
     
   },
   methods: {
-    noteon({ pitch }) {
-      playSound(midiNoteToFrequency(pitch));
+    noteon({ pitch, id }) {
+      const voice = new Voice(audioCtx);
+      voices[id] = voice;
+      voice.play(pitch);
+      console.log(`Playing note with id ${id} and pitch ${pitch}`)
+      console.log(`#Voices: `, voices)
     },
-    noteoff({ pitch }) {
+    noteoff({ pitch, id }) {
+      // https://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
       // stopSound(midiNoteToFrequency(pitch));
+      // audioCtx.
+      voices[id].stop();
     },
     togglePlaying() {
       if(this.$refs.sequencer.playing) {
