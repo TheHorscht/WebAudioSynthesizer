@@ -47,6 +47,9 @@ export default {
       const voice = new Voice(audioCtx);
       voices[id] = voice;
       voice.play(pitch);
+      voice.addEventListener('voiceDonePlaying', () => {
+        console.log('Voice finished playing');
+      });
       console.log(`Playing note with id ${id} and pitch ${pitch}`)
       console.log(`#Voices: `, voices)
     },

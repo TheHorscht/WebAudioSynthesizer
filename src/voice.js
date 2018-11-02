@@ -1,3 +1,5 @@
+import Observable from './observable'
+
 const midiNoteToFrequency = (function() {
   var midiNoteFrequencies = [];
   for (var x = 0; x < 127; ++x) {
@@ -8,8 +10,9 @@ const midiNoteToFrequency = (function() {
   }
 })();
 
-export default class Voice {
+export default class Voice extends Observable {
   constructor(audioCtx) {
+    super();
     this.audioCtx = audioCtx;
     this.gainNode = audioCtx.createGain();
     this.gainNode.gain.value = 0.4;
@@ -28,5 +31,6 @@ export default class Voice {
     this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, this.audioCtx.currentTime); 
 
     this.gainNode.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.03);
+    this.dispatchEvent('voiceDonePlaying');
   }
 }
