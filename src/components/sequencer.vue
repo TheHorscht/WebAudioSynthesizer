@@ -12,7 +12,7 @@
     </template>
   </svg>
   <!-- Grid -->
-  <svg width="100%" height="100%" shape-rendering="crispEdges ">
+  <svg width="100%" height="100%" shape-rendering="crispEdges">
     <!-- Background -->
     <rect v-for="i in 4" :key="'bgrect' + i"
           :x="(i-1) * (1/4) * 100 + '%'" width="25%" 
@@ -38,6 +38,15 @@
           stroke-width="0.3"
           class="note note-placed"
           @mousedown="removeNote(note)" />
+    <!-- Outlines to make sections more visible -->
+    <svg width="100%" height="100%" viewBox="0 0 100 100"
+         preserveAspectRatio="none"
+         shape-rendering="crispEdges">
+      <path v-for="i in 4" :key="'outline' + i"
+            d="M25 0 L0 0 0 25" :transform="`translate(${(i-1)*25},${0})`"
+            stroke="red" fill="none"
+            vector-effect="non-scaling-stroke" />
+    </svg>
     <!-- Playhead -->
     <line v-if="playing"
           :x1="tickP * computedWidth" y1="0"
