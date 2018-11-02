@@ -36,7 +36,8 @@
           :x="(note.startTick / totalTicks_) * 100 + '%'" :width="(1 / 16) * 100 + '%'"
           :y="(11 - (note.pitch - 60)) * (1 / 12) * 100 + '%'" :height="(1 / 12) * 100 + '%'"
           stroke-width="0.3"
-          class="note note-placed" />
+          class="note note-placed"
+          @mousedown="removeNote(note)" />
     <!-- Playhead -->
     <line v-if="playing"
           :x1="tickP * computedWidth" y1="0"
@@ -110,15 +111,19 @@ export default {
       const startTick = x * 16;
       const endTick = startTick + 8;
       const index = this.notes.findIndex(note => note.startTick === startTick);
-      if(index >= 0) {
+/*       if(index >= 0) {
         this.notes.splice(index, 1);
-      } else {
+      } else { */
         this.notes.push({
           id: generateNoteId(),
           pitch: 60 + (11 - y),
           startTick, endTick,
         });
-      }
+      // }
+    },
+    removeNote(note) {
+      const index = this.notes.indexOf(note);
+      this.notes.splice(index, 1);
     },
     stop() {
       this.position = 0;
@@ -153,7 +158,6 @@ body {
 }
 .note-placed {
   fill: #29365a;
-  pointer-events: none;
 }
 .note-empty {
   fill: transparent;
