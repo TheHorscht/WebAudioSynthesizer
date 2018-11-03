@@ -48,7 +48,9 @@ export default {
       voices[id] = voice;
       voice.play(pitch);
       voice.addEventListener('voiceDonePlaying', () => {
-        console.log('Voice finished playing');
+        window.setTimeout(() => {
+          delete voices[id];
+        }, 100);
       });
       console.log(`Playing note with id ${id} and pitch ${pitch}`)
       console.log(`#Voices: `, voices)
@@ -57,7 +59,9 @@ export default {
       // https://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
       // stopSound(midiNoteToFrequency(pitch));
       // audioCtx.
-      voices[id].stop();
+      if(id in voices) {
+        voices[id].stop();
+      }
     },
     togglePlaying() {
       if(this.$refs.sequencer.playing) {
