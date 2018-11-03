@@ -1,12 +1,18 @@
 <template>
   <div ref="container" :style="{ width: width + 'px', height: height + 'px' }">
   <!-- Keyboard -->
-  <svg width="100%" height="100%">
+  <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
     <!-- White keys -->
-    <rect x="0" y="0" width="100%" height="100%" fill="white" />
+    <rect x="1" y="0.1" height="12.5" class="white-key" vector-effect="non-scaling-stroke" />
+    <rect x="1" y="12.5" height="17" class="white-key" vector-effect="non-scaling-stroke" />
+    <rect x="1" y="29.5" height="17" class="white-key" vector-effect="non-scaling-stroke" />
+    <rect x="1" y="46.5" height="11.75" class="white-key" vector-effect="non-scaling-stroke" />
+    <rect x="1" y="58.25" height="12.75" class="white-key" vector-effect="non-scaling-stroke" />
+    <rect x="1" y="71" height="17" class="white-key" vector-effect="non-scaling-stroke" />
+    <rect x="1" y="88" height="12" class="white-key" vector-effect="non-scaling-stroke" />
     <!-- Black keys -->
     <template v-for="i in 12">
-      <rect x="0" :y="(i-1) * computedHeight_ / 12"
+      <rect x="0" :y="(i-1) * (100 / 12)"
             width="65%" height="8.33%"
             fill="black" :key="'blackkey'+i" v-if="[2, 4, 6, 9, 11].includes(i)"/>
     </template>
@@ -192,5 +198,11 @@ body {
   stroke: #484140;
   fill: none;
   stroke-width: 2px;
+}
+.white-key {
+  width: 100%;
+  fill: white;
+  stroke: black;
+  stroke-width: 0.5;
 }
 </style>
