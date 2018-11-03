@@ -6,7 +6,7 @@
     <rect x="0" y="0" width="100%" height="100%" fill="white" />
     <!-- Black keys -->
     <template v-for="i in 12">
-      <rect x="0" :y="(i-1) * computedHeight / 12"
+      <rect x="0" :y="(i-1) * computedHeight_ / 12"
             width="65%" height="8.33%"
             fill="black" :key="'blackkey'+i" v-if="[2, 4, 6, 9, 11].includes(i)"/>
     </template>
@@ -78,10 +78,11 @@ export default {
   data: () => ({
     notes: [],
     position: 0,
+    playmarkerPosition_: 0,
     playing: false,
     totalTicks_: 16 * 16,
-    computedWidth: 0,
-    computedHeight: 0,
+    computedWidth_: 0,
+    computedHeight_: 0,
   }),
   mounted() {
     const child = this.$refs.container;
@@ -93,17 +94,20 @@ export default {
       let newWidth = parseInt(window.getComputedStyle(child).width, 10);
       newWidth -= 100;
       let newHeight = parseInt(window.getComputedStyle(child).height, 10);
-      this.computedWidth = newWidth;
-      this.computedHeight = newHeight;
-      console.log(newWidth)
+      this.computedWidth_ = newWidth;
+      this.computedHeight_ = newHeight;
     };
     calculateAndSetSize();
 
     observer.observe(child, { attributes: true, attributeFilter: ['style'] });
-    this.update();
+    // TODO: Make timing precise with service workers!
+    // Example: https://github.com/buildist/onlinesequencer/blob/master/app/sequencer.worker.js
+    // With 8ms interval between ticks @ 16 ticks per 16th note runs at 118 BPM
+    window.setInterval(this.update_, 8);
+    this.updateVisuals_();
   },
   methods: {
-    update() {
+    update_() {
       if(this.playing) {
         this.notes.forEach(note => {
           if(this.position == note.startTick) {
@@ -116,21 +120,20 @@ export default {
         this.position += 1;
         this.position %= this.totalTicks_;
       }
-      window.requestAnimationFrame(this.update);
+    },
+    updateVisuals_() {
+      this.playmarkerPosition_ = this.position;
+      window.requestAnimationFrame(this.updateVisuals_);
     },
     placeNote(x, y) {
       const startTick = x * 16;
-      const endTick = startTick + 8;
+      const endTick = startTick + 16;
       const index = this.notes.findIndex(note => note.startTick === startTick);
-/*       if(index >= 0) {
-        this.notes.splice(index, 1);
-      } else { */
         this.notes.push({
           id: generateNoteId(),
           pitch: 60 + (11 - y),
           startTick, endTick,
         });
-      // }
     },
     removeNote(note) {
       const index = this.notes.indexOf(note);
@@ -145,7 +148,7 @@ export default {
     },
   },
   computed: {
-    tickP: self => self.position / self.totalTicks_,
+    tickP: self => self.playmarkerPosition_ / self.totalTicks_,
   },
 }
 </script>
