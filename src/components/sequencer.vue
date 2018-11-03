@@ -3,13 +3,10 @@
   <!-- Keyboard -->
   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
     <!-- White keys -->
-    <rect x="1" y="0.1" height="12.5" class="white-key" vector-effect="non-scaling-stroke" />
-    <rect x="1" y="12.5" height="17" class="white-key" vector-effect="non-scaling-stroke" />
-    <rect x="1" y="29.5" height="17" class="white-key" vector-effect="non-scaling-stroke" />
-    <rect x="1" y="46.5" height="11.75" class="white-key" vector-effect="non-scaling-stroke" />
-    <rect x="1" y="58.25" height="12.75" class="white-key" vector-effect="non-scaling-stroke" />
-    <rect x="1" y="71" height="17" class="white-key" vector-effect="non-scaling-stroke" />
-    <rect x="1" y="88" height="12" class="white-key" vector-effect="non-scaling-stroke" />
+    <rect v-for="i in 7" :key="'whiteKey'+i"
+          class="white-key" vector-effect="non-scaling-stroke"
+          x="1" :y="[0.1, 12.5, 29.5, 46.5, 58.25, 71, 88][i-1]"
+          :height="[12.5, 17, 17, 11.75, 12.75, 17, 12][i-1]" />
     <!-- Black keys -->
     <template v-for="i in 12">
       <rect x="0" :y="(i-1) * (100 / 12)"
