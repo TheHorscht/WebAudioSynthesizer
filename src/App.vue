@@ -48,9 +48,7 @@ export default {
       voices[id] = voice;
       voice.noteOn(pitch);
       voice.addEventListener('voiceDonePlaying', () => {
-        window.setTimeout(() => {
-          delete voices[id];
-        }, 100);
+        delete voices[id];
       });
     },
     noteoff({ pitch, id }) {

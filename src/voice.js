@@ -32,6 +32,8 @@ export default class Voice extends Observable {
     this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, this.audioCtx.currentTime); 
   
     this.gainNode.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.03);
-    this.dispatchEvent('voiceDonePlaying');
+    window.setTimeout(() => {
+      this.dispatchEvent('voiceDonePlaying')
+    }, 100);
   }
 }
