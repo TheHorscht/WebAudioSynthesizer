@@ -25,6 +25,7 @@ import vueSlider from 'vue-slider-component'
 import vueSequencer from './components/sequencer'
 import sliderConfig from './slider-config'
 import Voice from './voice'
+import './key-events.js'
 
 const audioCtx = new AudioContext();
 const voices = {};
@@ -84,8 +85,9 @@ export default {
     sliderConfig,
   }),
   mounted () {
-    window.addEventListener('keydown', e => {
-      if(!e.repeat && e.key in keysToMidiNote) {
+    window.addEventListener('key-event-down-norepeat', e => {
+      e = e.detail;
+      if(e.key in keysToMidiNote) {
         this.noteon({ pitch: keysToMidiNote[e.key], id: 'what' + e.key });
       }
     });
@@ -96,16 +98,21 @@ export default {
   methods: {
     noteon({ pitch, id }) {
       const voice = new Voice(audioCtx);
-      voices[id] = voice;
+      if(id in voices) {
+        voices[id].push(voice);
+      } else {
+        voices[id] = [voice];
+      }
       voice.noteOn(pitch);
       voice.addEventListener('voiceDonePlaying', () => {
-        delete voices[id];
+        // voices[id].pop();
       });
     },
     noteoff({ id }) {
       console.log(voices)
       if(id in voices) {
-        voices[id].noteOff();
+        let voice = voices[id].pop();
+        voice.noteOff();
       }
     },
     togglePlaying() {
