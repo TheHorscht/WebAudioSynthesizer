@@ -12,46 +12,48 @@
     </template>
   </svg>
   <!-- Grid -->
-  <svg width="100%" height="100%" shape-rendering="crispEdges">
+  <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
     <!-- Background -->
     <rect v-for="i in 4" :key="'bgrect' + i"
-          :x="(i-1) * (1/4) * 100 + '%'" width="25%" 
+          :x="(i-1) * (100/4)" width="25" 
           y="0" height="100%"
           :class="(i-1) % 2 == 0 ? 'bg1' : 'bg2'" />
     <!-- White/Black horizontal lines -->
     <rect v-for="i in 12" :key="'whiteBlackRect' + i"
           :x="0" width="100%"
-          :y="(i-1) * computedHeight / 12" height="8.33%"
+          :y="(i-1) * 100 / 12" height="8.33%"
           class="blackKeyGrid"
           v-if="[2, 4, 6, 9, 11].includes(i)" />
     <!-- Empty rects -->
     <rect v-for="(note, i) in 12*16" :key="'emptyrect' + i"
-          :x="Math.floor(i % 16) * (1 / 16) * 100 + '%'" :width="(1 / 16) * 100 + '%'"
-          :y="Math.floor(i / 16) * (1 / 12) * 100 + '%'" :height="(1 / 12) * 100 + '%'"
-          stroke-width="0.3"
+          :x="Math.floor(i % 16) * (100 / 16)" :width="(100 / 16)"
+          :y="Math.floor(i / 16) * (100 / 12)" :height="(100 / 12)"
+          stroke-width="0.1"
           class="note note-empty"
           @mousedown="placeNote(Math.floor(i % 16), Math.floor(i / 16))" />
     <!-- Placed notes -->
     <rect v-for="note in notes" :key="`note${note.pitch}-${note.startTick}`"
           :x="(note.startTick / totalTicks_) * 100 + '%'" :width="(1 / 16) * 100 + '%'"
           :y="(11 - (note.pitch - 60)) * (1 / 12) * 100 + '%'" :height="(1 / 12) * 100 + '%'"
-          stroke-width="0.3"
+          stroke-width="0.1"
           class="note note-placed"
           @mousedown="removeNote(note)" />
     <!-- Outlines to make sections more visible -->
-    <svg width="100%" height="100%" viewBox="0 0 100 100"
-         preserveAspectRatio="none"
-         shape-rendering="crispEdges">
       <path v-for="i in 4" :key="'outline' + i"
-            d="M25 0 L0 0 0 25" :transform="`translate(${(i-1)*25},${0})`"
-            stroke="red" fill="none"
+            d="M25 0 L0 0 0 100" :transform="`translate(${(i-1)*25},${0})`"
+            class="line-outline"
             vector-effect="non-scaling-stroke" />
-    </svg>
+      <path d="M100 0 L100 100 0 100"
+            class="line-outline"
+            vector-effect="non-scaling-stroke" />
+      <path :d="`M0 ${100 / 12 * 7} L100 ${100 / 12 * 7}`"
+            class="line-outline"
+            vector-effect="non-scaling-stroke" />
     <!-- Playhead -->
     <line v-if="playing"
-          :x1="tickP * computedWidth" y1="0"
-          :x2="tickP * computedWidth" y2="100%"
-          stroke-width="1" stroke="yellow" />
+          :x1="tickP * 100" y1="0"
+          :x2="tickP * 100" y2="100%"
+          stroke-width="0.2" stroke="yellow" />
   </svg>
   </div>
 </template>
@@ -159,6 +161,9 @@ div {
   max-width: 800px;
   max-height: 800px;
 }
+svg {
+  shape-rendering: crispEdges;
+}
 body {
   height: 100%;
 }
@@ -179,5 +184,10 @@ body {
 }
 .blackKeyGrid {
   fill: #5757574d;
+}
+.line-outline {
+  stroke: #484140;
+  fill: none;
+  stroke-width: 2px;
 }
 </style>
