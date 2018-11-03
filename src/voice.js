@@ -31,7 +31,6 @@ export default class Voice extends Observable {
 
     this.biquadFilter.type = 'lowpass';
     this.biquadFilter.frequency.setValueAtTime(1000, audioCtx.currentTime);
-    this.biquadFilter.gain.setValueAtTime(25, audioCtx.currentTime);
     this.biquadFilter.connect(this.gainNode);
 
     this.gainNode.gain.value = 0.4;
