@@ -109,7 +109,6 @@ export default {
       });
     },
     noteoff({ id }) {
-      console.log(voices)
       if(id in voices) {
         let voice = voices[id].pop();
         voice.noteOff();
@@ -118,8 +117,9 @@ export default {
     togglePlaying() {
       if(this.$refs.sequencer.playing) {
         this.$refs.sequencer.stop();
-        Object.values(voices).forEach(voice => {
-          voice.noteOff();
+        Object.values(voices).forEach(voiceArray => {
+          voiceArray.forEach(voice => voice.noteOff());
+          voiceArray.length = 0;
         });
       } else {
         this.$refs.sequencer.resume();
