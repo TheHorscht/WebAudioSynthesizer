@@ -186,7 +186,7 @@ body {
   fill: #63615f;
 }
 .blackKeyGrid {
-  fill: #5757574d;
+  fill: #575757b8;
 }
 .line-outline {
   stroke: #484140;
