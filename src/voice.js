@@ -49,9 +49,9 @@ export default class Voice extends Observable {
     // TODO: Trigger release envelope
     // Important! Setting a scheduled parameter value
     this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, this.audioCtx.currentTime);
-    this.gainNode.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.03);
+    this.gainNode.gain.exponentialRampToValueAtTime(0.0000001, this.audioCtx.currentTime + 0.03);
     window.setTimeout(() => {
       this.dispatchEvent('voiceDonePlaying')
-    }, 100);
+    }, 50);
   }
 }
