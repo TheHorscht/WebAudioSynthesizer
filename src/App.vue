@@ -27,7 +27,51 @@ import sliderConfig from './slider-config'
 import Voice from './voice'
 
 const audioCtx = new AudioContext();
-let voices = {};
+const voices = {};
+
+let keysToMidiNote = {
+	"y": 36,
+	"s": 37,
+	"x": 38,
+	"d": 39,
+	"c": 40,
+	"v": 41,
+	"g": 42,
+	"b": 43,
+	"h": 44,
+	"n": 45,
+	"j": 46,
+	"m": 47,
+	",": 48,
+	"l": 49,
+	".": 50,
+	"ö": 51,
+	"-": 52,
+	"q": 48,
+	"2": 49,
+	"w": 50,
+	"3": 51,
+	"e": 52,
+	"r": 53,
+	"5": 54,
+	"t": 55,
+	"6": 56,
+	"z": 57,
+	"7": 58,
+	"u": 59,
+	"i": 60,
+	"9": 61,
+	"o": 62,
+	"0": 63,
+	"p": 64,
+	"ü": 65,
+	"Dead": 66,
+	"+": 67
+};
+const generateNewId = (() => {
+  let c = 0;
+  return () => c++;
+})();
 
 export default {
   name: 'app',
@@ -40,7 +84,14 @@ export default {
     sliderConfig,
   }),
   mounted () {
-    
+    window.addEventListener('keydown', e => {
+      if(!e.repeat && e.key in keysToMidiNote) {
+        this.noteon({ pitch: keysToMidiNote[e.key], id: 'what' + e.key });
+      }
+    });
+    window.addEventListener('keyup', e => {
+      this.noteoff({ id: 'what' + e.key });
+    });
   },
   methods: {
     noteon({ pitch, id }) {
@@ -51,10 +102,8 @@ export default {
         delete voices[id];
       });
     },
-    noteoff({ pitch, id }) {
-      // https://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
-      // stopSound(midiNoteToFrequency(pitch));
-      // audioCtx.
+    noteoff({ id }) {
+      console.log(voices)
       if(id in voices) {
         voices[id].noteOff();
       }
