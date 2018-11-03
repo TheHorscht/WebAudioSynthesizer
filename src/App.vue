@@ -46,26 +46,27 @@ export default {
     noteon({ pitch, id }) {
       const voice = new Voice(audioCtx);
       voices[id] = voice;
-      voice.play(pitch);
+      voice.noteOn(pitch);
       voice.addEventListener('voiceDonePlaying', () => {
         window.setTimeout(() => {
           delete voices[id];
         }, 100);
       });
-      console.log(`Playing note with id ${id} and pitch ${pitch}`)
-      console.log(`#Voices: `, voices)
     },
     noteoff({ pitch, id }) {
       // https://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
       // stopSound(midiNoteToFrequency(pitch));
       // audioCtx.
       if(id in voices) {
-        voices[id].stop();
+        voices[id].noteOff();
       }
     },
     togglePlaying() {
       if(this.$refs.sequencer.playing) {
         this.$refs.sequencer.stop();
+        Object.values(voices).forEach(voice => {
+          voice.noteOff();
+        });
       } else {
         this.$refs.sequencer.resume();
       } 

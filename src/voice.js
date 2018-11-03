@@ -18,7 +18,7 @@ export default class Voice extends Observable {
     this.gainNode.gain.value = 0.4;
     this.gainNode.connect(this.audioCtx.destination);
   }
-  play(midiNote) {
+  noteOn(midiNote) {
     this.oscillatorNode = this.audioCtx.createOscillator();
     this.oscillatorNode.connect(this.gainNode);
     this.oscillatorNode.type = 'sine';
@@ -26,10 +26,11 @@ export default class Voice extends Observable {
     this.oscillatorNode.start(this.audioCtx.currentTime);
     this.oscillatorNode.stop(this.audioCtx.currentTime + 0.5);
   }
-  stop() {
+  noteOff() {
+    // TODO: Trigger release envelope
     // Important! Setting a scheduled parameter value
     this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, this.audioCtx.currentTime); 
-
+  
     this.gainNode.gain.exponentialRampToValueAtTime(0.0001, this.audioCtx.currentTime + 0.03);
     this.dispatchEvent('voiceDonePlaying');
   }
