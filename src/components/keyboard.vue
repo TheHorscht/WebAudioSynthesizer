@@ -9,16 +9,58 @@
           @pointerup="onWhiteKeyUp(7-i, $event)" />
     <!-- Black keys -->
     <template v-for="(v, i) in [2, 4, 6, 9, 11]">
-      <rect x="0" :y="(v-1) * (100 / 12)"
+      <rect :key="'blackKey'+i"
+            x="0" :y="(v-1) * (100 / 12)"
             width="65%" height="8.33%"
-            fill="black" :key="'blackkey'+i"
-            :class="[isBlackKeyDown_[4-i] ? 'black-key-down' : '']"
+            :class="['black-key', isBlackKeyDown_[4-i] ? 'black-key-down' : '']"
             @pointerdown="onBlackKeyDown(4-i, $event)"
             @pointerup="onBlackKeyUp(4-i, $event)" />
     </template>
   </svg>
 </template>
 <script>
+import '../key-events.js'
+
+let keysToMidiNote = {
+  "KeyZ": 36,
+  "KeyS": 37,
+  "KeyX": 38,
+  "KeyD": 39,
+  "KeyC": 40,
+  "KeyV": 41,
+  "KeyG": 42,
+  "KeyB": 43,
+  "KeyH": 44,
+  "KeyN": 45,
+  "KeyJ": 46,
+  "KeyM": 47,
+  "Comma": 48,
+  "KeyL": 49,
+  "Period": 50,
+  "Semicolon": 51,
+  "Slash": 52,
+  "KeyQ": 48,
+  "Digit2": 49,
+  "KeyW": 50,
+  "Digit3": 51,
+  "KeyE": 52,
+  "KeyR": 53,
+  "Digit5": 54,
+  "KeyT": 55,
+  "Digit6": 56,
+  "KeyY": 57,
+  "Digit7": 58,
+  "KeyU": 59,
+  "KeyI": 60,
+  "Digit9": 61,
+  "KeyO": 62,
+  "Digit0": 63,
+  "KeyP": 64,
+  "BracketLeft": 65,
+  "Equal": 66,
+  "BracketRight": 67,
+};
+// ["KeyZ", "KeyS", "KeyX", "KeyD", "KeyC", "KeyV", "KeyG", "KeyB", "KeyH", "KeyN", "KeyJ", "KeyM", "Comma", "KeyL", "Period", "Semicolon", "Slash", "KeyQ", "Digit2", "KeyW", "Digit3", "KeyE", "KeyR", "Digit5", "KeyT", "Digit6", "KeyY", "Digit7", "KeyU", "KeyI", "Digit9", "KeyO", "Digit0", "KeyP", "BracketLeft", "Equal", "BracketRight"]
 export default {
   name: 'VueKeyboard',
   data: () => ({
@@ -26,6 +68,16 @@ export default {
     isBlackKeyDown_: {},
   }),
   mounted() {
+    window.addEventListener('key-event-down-norepeat', e => {
+      e = e.detail;
+      if(e.code in keysToMidiNote) {
+        this.$emit('noteOn', keysToMidiNote[e.code]);
+      }
+    });
+    window.addEventListener('key-event-up', e => {
+      e = e.detail;
+      this.$emit('noteOff', keysToMidiNote[e.code]);
+    });
   },
   methods: {
     onWhiteKeyDown(keyNumber, e) {
@@ -35,7 +87,7 @@ export default {
         pitch: 60 + [0,2,4,5,7,9,11][keyNumber],
       };
       this.$set(this.isWhiteKeyDown_, keyNumber, true);
-      this.$emit('noteon', note);
+      this.$emit('noteOn', note);
     },
     onWhiteKeyUp(keyNumber, e) {
       e.target.releasePointerCapture(e.pointerId);
@@ -44,7 +96,7 @@ export default {
         pitch: 60 + [0,2,4,5,7,9,11][keyNumber],
       };
       this.$set(this.isWhiteKeyDown_, keyNumber, false);
-      this.$emit('noteoff', note);
+      this.$emit('noteOff', note);
     },
     onBlackKeyDown(keyNumber, e) {
       console.log(keyNumber)
@@ -54,7 +106,7 @@ export default {
         pitch: 60 + [2, 4, 7, 9, 11][keyNumber] - 1,
       };
       this.$set(this.isBlackKeyDown_, keyNumber, true);
-      this.$emit('noteon', note);
+      this.$emit('noteOn', note);
     },
     onBlackKeyUp(keyNumber, e) {
       e.target.releasePointerCapture(e.pointerId);
@@ -63,7 +115,7 @@ export default {
         pitch: 60 + [2, 4, 7, 9, 11][keyNumber] - 1,
       };
       this.$set(this.isBlackKeyDown_, keyNumber, false);
-      this.$emit('noteoff', note);
+      this.$emit('noteOff', note);
     }
   },
 }
@@ -81,7 +133,10 @@ svg {
     fill: red;
   }
 }
-.black-key-down {
-  fill: red;
+.black-key {
+  fill: black;
+  &-down {
+    fill: red;
+  }
 }
 </style>
