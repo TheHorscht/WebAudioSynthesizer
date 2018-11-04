@@ -81,10 +81,10 @@ export default {
       if(this.playing) {
         this.notes.forEach(note => {
           if(this.position == note.startTick) {
-            this.$emit('noteon', note);
+            this.$emit('noteOn', note);
           }
           if(this.position == note.endTick) {
-            this.$emit('noteoff', note);
+            this.$emit('noteOff', note);
           }
         });
         this.position += 1;
