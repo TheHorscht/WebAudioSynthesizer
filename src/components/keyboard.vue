@@ -123,13 +123,13 @@ svg {
   stroke: black;
   stroke-width: 0.5;
   &-down {
-    fill: red;
+    fill: #a7d4a5;
   }
 }
 .black-key {
   fill: black;
   &-down {
-    fill: red;
+    fill: #5da55a;
   }
 }
 </style>
