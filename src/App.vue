@@ -14,7 +14,10 @@
       <span>R</span>
     </div>
     <vue-slider v-bind="sliderConfig.horizontal" />
-    <vue-sequencer ref="sequencer" @noteon="noteon" @noteoff="noteoff" />
+    <div class="kb-and-sequencer">
+      <vue-keyboard />
+      <vue-sequencer ref="sequencer" @noteon="noteon" @noteoff="noteoff" />
+    </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
   </div>
 </template>
@@ -22,6 +25,7 @@
 <script>
 import knob from './components/knob'
 import vueSlider from 'vue-slider-component'
+import vueKeyboard from './components/keyboard'
 import vueSequencer from './components/sequencer'
 import sliderConfig from './slider-config'
 import Voice from './voice'
@@ -79,6 +83,7 @@ export default {
   components: {
     knob,
     vueSlider,
+    vueKeyboard,
     vueSequencer,
   },
   data: () => ({
@@ -140,5 +145,16 @@ body {
   grid-template-rows: auto 20px;
   justify-items: center;
   font-family: 'Roboto', sans-serif;
+}
+.kb-and-sequencer {
+  display: grid;
+  grid-template-columns: 100px auto;
+  resize: both;
+  overflow: scroll;
+  
+  min-width: 400px;
+  min-height: 200px;
+  max-width: 800px;
+  max-height: 800px;
 }
 </style>
