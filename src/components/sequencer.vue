@@ -10,10 +10,13 @@
           @pointerdown="onWhiteKeyDown(7-i, $event)"
           @pointerup="onWhiteKeyUp(7-i, $event)" />
     <!-- Black keys -->
-    <template v-for="i in 12">
-      <rect x="0" :y="(i-1) * (100 / 12)"
+    <template v-for="(v, i) in [2, 4, 6, 9, 11]">
+      <rect x="0" :y="(v-1) * (100 / 12)"
             width="65%" height="8.33%"
-            fill="black" :key="'blackkey'+i" v-if="[2, 4, 6, 9, 11].includes(i)"/>
+            fill="black" :key="'blackkey'+i"
+            :class="[isBlackKeyDown_[4-i] ? 'black-key-down' : '']"
+            @pointerdown="onBlackKeyDown(4-i, $event)"
+            @pointerup="onBlackKeyUp(4-i, $event)" />
     </template>
   </svg>
   <!-- Grid -->
@@ -89,6 +92,7 @@ export default {
     computedWidth_: 0,
     computedHeight_: 0,
     isWhiteKeyDown_: {},
+    isBlackKeyDown_: {},
   }),
   mounted() {
     const child = this.$refs.container;
@@ -169,6 +173,25 @@ export default {
       };
       this.$set(this.isWhiteKeyDown_, keyNumber, false);
       this.$emit('noteoff', note);
+    },
+    onBlackKeyDown(keyNumber, e) {
+      console.log(keyNumber)
+      e.target.setPointerCapture(e.pointerId);
+      const note = {
+        id: 'blackKey' + keyNumber,
+        pitch: 60 + [2, 4, 7, 9, 11][keyNumber] - 1,
+      };
+      this.$set(this.isBlackKeyDown_, keyNumber, true);
+      this.$emit('noteon', note);
+    },
+    onBlackKeyUp(keyNumber, e) {
+      e.target.releasePointerCapture(e.pointerId);
+      const note = {
+        id: 'blackKey' + keyNumber,
+        pitch: 60 + [2, 4, 7, 9, 11][keyNumber] - 1,
+      };
+      this.$set(this.isBlackKeyDown_, keyNumber, false);
+      this.$emit('noteoff', note);
     }
   },
   computed: {
@@ -225,5 +248,8 @@ body {
   &-down {
     fill: red;
   }
+}
+.black-key-down {
+  fill: red;
 }
 </style>
