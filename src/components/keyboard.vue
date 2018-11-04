@@ -1,20 +1,13 @@
 <template>
   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-    <!-- White keys -->
-    <rect v-for="i in 7" :key="'whiteKey'+i"
-          :class="['white-key',isWhiteKeyDown_[7-i] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
-          x="1" :y="[0.1, 12.5, 29.5, 46.5, 58.25, 71, 88][i-1]"
-          :height="[12.5, 17, 17, 11.75, 12.75, 17, 12][i-1]"
-          @pointerdown="onWhiteKeyDown(7-i, $event)"
-          @pointerup="onWhiteKeyUp(7-i, $event)" />
-    <!-- Black keys -->
-    <template v-for="(v, i) in [2, 4, 6, 9, 11]">
-      <rect :key="'blackKey'+i"
-            x="0" :y="(v-1) * (100 / 12)"
-            width="65%" height="8.33%"
-            :class="['black-key', isBlackKeyDown_[4-i] ? 'black-key-down' : '']"
-            @pointerdown="onBlackKeyDown(4-i, $event)"
-            @pointerup="onBlackKeyUp(4-i, $event)" />
+    <template v-for="i in 12">
+      <rect v-if="[0,2,4,6,7,9,11].includes(i)" :key="'whiteKey'+i" />
+      <rect v-else :key="'blackKey'+i"
+            x="0" :y="i * 100/12"
+            width="63" :height="100/12"
+            :class="['black-key', isKeyDown_[48+(11-i)] ? 'black-key-down' : '']"
+            @pointerdown="keyDown(48+(11-i), $event)"
+            @pointerup="keyUp(48+(11-i), $event)" />
     </template>
   </svg>
 </template>
@@ -64,57 +57,51 @@ let keysToMidiNote = {
 export default {
   name: 'VueKeyboard',
   data: () => ({
-    isWhiteKeyDown_: {},
-    isBlackKeyDown_: {},
+    isKeyDown_: {},
   }),
   mounted() {
     window.addEventListener('key-event-down-norepeat', e => {
       e = e.detail;
       if(e.code in keysToMidiNote) {
-        this.$emit('noteOn', keysToMidiNote[e.code]);
+        const note = {
+          id: 'kb' + keysToMidiNote[e.code],
+          pitch: keysToMidiNote[e.code],
+        };
+        // this.$emit('noteOn', note);
+        this.keyDown(keysToMidiNote[e.code]);
       }
     });
     window.addEventListener('key-event-up', e => {
       e = e.detail;
-      this.$emit('noteOff', keysToMidiNote[e.code]);
+      const note = {
+        id: 'kb' + keysToMidiNote[e.code],
+        pitch: keysToMidiNote[e.code],
+      };
+      // this.$emit('noteOff', note);
+      this.keyUp(keysToMidiNote[e.code]);
     });
   },
   methods: {
-    onWhiteKeyDown(keyNumber, e) {
-      e.target.setPointerCapture(e.pointerId);
+    keyDown(keyNumber, e) {
+      if(e) {
+        e.target.setPointerCapture(e.pointerId);
+      }
       const note = {
-        id: 'whiteKey' + keyNumber,
-        pitch: 60 + [0,2,4,5,7,9,11][keyNumber],
+        id: 'kb' + keyNumber,
+        pitch: keyNumber,
       };
-      this.$set(this.isWhiteKeyDown_, keyNumber, true);
+      this.$set(this.isKeyDown_, keyNumber, true);
       this.$emit('noteOn', note);
     },
-    onWhiteKeyUp(keyNumber, e) {
-      e.target.releasePointerCapture(e.pointerId);
+    keyUp(keyNumber, e) {
+      if(e) {
+        e.target.releasePointerCapture(e.pointerId);
+      }
       const note = {
-        id: 'whiteKey' + keyNumber,
-        pitch: 60 + [0,2,4,5,7,9,11][keyNumber],
+        id: 'kb' + keyNumber,
+        pitch: keyNumber,
       };
-      this.$set(this.isWhiteKeyDown_, keyNumber, false);
-      this.$emit('noteOff', note);
-    },
-    onBlackKeyDown(keyNumber, e) {
-      console.log(keyNumber)
-      e.target.setPointerCapture(e.pointerId);
-      const note = {
-        id: 'blackKey' + keyNumber,
-        pitch: 60 + [2, 4, 7, 9, 11][keyNumber] - 1,
-      };
-      this.$set(this.isBlackKeyDown_, keyNumber, true);
-      this.$emit('noteOn', note);
-    },
-    onBlackKeyUp(keyNumber, e) {
-      e.target.releasePointerCapture(e.pointerId);
-      const note = {
-        id: 'blackKey' + keyNumber,
-        pitch: 60 + [2, 4, 7, 9, 11][keyNumber] - 1,
-      };
-      this.$set(this.isBlackKeyDown_, keyNumber, false);
+      this.$set(this.isKeyDown_, keyNumber, false);
       this.$emit('noteOff', note);
     }
   },

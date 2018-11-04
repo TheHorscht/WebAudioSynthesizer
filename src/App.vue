@@ -15,8 +15,7 @@
     </div>
     <vue-slider v-bind="sliderConfig.horizontal" />
     <div class="kb-and-sequencer">
-      <vue-keyboard @noteOn="noteOn({pitch: $event, id: 'kb'+$event})"
-                    @noteOff="noteOff({pitch: $event, id: 'kb'+$event})"/>
+      <vue-keyboard @noteOn="noteOn" @noteOff="noteOff"/>
       <vue-sequencer ref="sequencer" @noteOn="noteOn" @noteOff="noteOff" />
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
