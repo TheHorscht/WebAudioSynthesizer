@@ -33,7 +33,7 @@ export default class Voice extends Observable {
     this.biquadFilter.frequency.setValueAtTime(1000, audioCtx.currentTime);
     this.biquadFilter.connect(this.gainNode);
 
-    this.gainNode.gain.value = 0.4;
+    this.gainNode.gain.value = 0.2;
     this.gainNode.connect(this.audioCtx.destination);
   }
   noteOn(midiNote) {
