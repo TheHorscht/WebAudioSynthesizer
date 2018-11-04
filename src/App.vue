@@ -15,8 +15,8 @@
     </div>
     <vue-slider v-bind="sliderConfig.horizontal" />
     <div class="kb-and-sequencer">
-      <vue-keyboard @noteOn="noteOn" @noteOff="noteOff"/>
-      <vue-sequencer ref="sequencer" @noteOn="noteOn" @noteOff="noteOff" />
+      <vue-keyboard ref="keyboard" @noteOn="noteOn($event, 'kb')" @noteOff="noteOff($event, 'kb')"/>
+      <vue-sequencer ref="sequencer" @noteOn="noteOn($event, 'sq')" @noteOff="noteOff($event, 'sq')" />
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
   </div>
@@ -51,27 +51,36 @@ export default {
   mounted () {
   },
   methods: {
-    noteOn({ pitch, id }) {
-      const voice = new Voice(audioCtx);
-      if(id in voices) {
-        voices[id].push(voice);
+    noteOn({ pitch, id }, source) {
+      if(source === 'sq') {
+        this.$refs.keyboard.keyDown(pitch - 12);
       } else {
-        voices[id] = [voice];
+        const voice = new Voice(audioCtx);
+        if(id in voices) {
+          voices[id].push(voice);
+        } else {
+          voices[id] = [voice];
+        }
+        voice.noteOn(pitch);
+        voice.addEventListener('voiceDonePlaying', () => {
+          // voices[id].pop();
+        });
       }
-      voice.noteOn(pitch);
-      voice.addEventListener('voiceDonePlaying', () => {
-        // voices[id].pop();
-      });
     },
-    noteOff({ id }) {
-      if(id in voices) {
-        let voice = voices[id].pop();
-        voice.noteOff();
+    noteOff({ pitch, id }, source) {
+      if(source === 'sq') {
+        this.$refs.keyboard.keyUp(pitch - 12);
+      } else {
+        if(id in voices) {
+          let voice = voices[id].pop();
+          voice.noteOff();
+        }
       }
     },
     togglePlaying() {
       if(this.$refs.sequencer.playing) {
         this.$refs.sequencer.stop();
+        this.$refs.keyboard.releaseAllKeys();
         Object.values(voices).forEach(voiceArray => {
           voiceArray.forEach(voice => voice.noteOff());
           voiceArray.length = 0;

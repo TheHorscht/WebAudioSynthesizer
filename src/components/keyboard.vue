@@ -109,6 +109,11 @@ export default {
         this.$set(this.isKeyDown_, keyNumber, false);
         this.$emit('noteOff', note);
       }
+    },
+    releaseAllKeys() {
+      for(let keyNumber in this.isKeyDown_) {
+        this.$set(this.isKeyDown_, keyNumber, false);
+      }
     }
   },
 }
