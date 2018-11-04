@@ -112,7 +112,7 @@ body {
   overflow: scroll;
   
   min-width: 400px;
-  min-height: 200px;
+  min-height: 400px;
   max-width: 800px;
   max-height: 800px;
 }
