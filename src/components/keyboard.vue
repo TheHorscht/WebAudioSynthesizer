@@ -1,14 +1,18 @@
 <template>
   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-    <template v-for="i in 12">
-      <rect v-if="[0,2,4,6,7,9,11].includes(i)" :key="'whiteKey'+i" />
-      <rect v-else :key="'blackKey'+i"
-            x="0" :y="i * 100/12"
+        <rect v-for="i in 12" v-if="[1,3,5,7,8,10,12].includes(i)" :key="'whiteKey'+i"
+            :class="['white-key', isKeyDown_[48+(12-i)] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
+            x="1" :y="[0, 0.1, 0, 12.5, 0, 29.5, 0, 46.5, 58.25, 0, 71, 0, 88][i]"
+            :height="[0, 12.5, 0, 17, 0, 17, 0, 11.75, 12.75, 0, 17, 0, 12][i]"
+            :data-b="i"
+            @pointerdown="keyDown(48+(12-i), $event)"
+            @pointerup="keyUp(48+(12-i), $event)" />
+      <rect v-for="i in 12" v-if="[2,4,6,9,11].includes(i)" :key="'blackKey'+i"
+            x="0" :y="(i-1) * 100/12"
             width="63" :height="100/12"
-            :class="['black-key', isKeyDown_[48+(11-i)] ? 'black-key-down' : '']"
-            @pointerdown="keyDown(48+(11-i), $event)"
-            @pointerup="keyUp(48+(11-i), $event)" />
-    </template>
+            :class="['black-key', isKeyDown_[48+(12-i)] ? 'black-key-down' : '']"
+            @pointerdown="keyDown(48+(12-i), $event)"
+            @pointerup="keyUp(48+(12-i), $event)" />
   </svg>
 </template>
 <script>
@@ -97,12 +101,14 @@ export default {
       if(e) {
         e.target.releasePointerCapture(e.pointerId);
       }
-      const note = {
-        id: 'kb' + keyNumber,
-        pitch: keyNumber,
-      };
-      this.$set(this.isKeyDown_, keyNumber, false);
-      this.$emit('noteOff', note);
+      if(this.isKeyDown_[keyNumber]) {
+        const note = {
+          id: 'kb' + keyNumber,
+          pitch: keyNumber,
+        };
+        this.$set(this.isKeyDown_, keyNumber, false);
+        this.$emit('noteOff', note);
+      }
     }
   },
 }
