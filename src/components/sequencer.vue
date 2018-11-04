@@ -4,9 +4,11 @@
   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
     <!-- White keys -->
     <rect v-for="i in 7" :key="'whiteKey'+i"
-          class="white-key" vector-effect="non-scaling-stroke"
+          :class="['white-key',isWhiteKeyDown_[7-i] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
           x="1" :y="[0.1, 12.5, 29.5, 46.5, 58.25, 71, 88][i-1]"
-          :height="[12.5, 17, 17, 11.75, 12.75, 17, 12][i-1]" />
+          :height="[12.5, 17, 17, 11.75, 12.75, 17, 12][i-1]"
+          @pointerdown="onWhiteKeyDown(7-i, $event)"
+          @pointerup="onWhiteKeyUp(7-i, $event)" />
     <!-- Black keys -->
     <template v-for="i in 12">
       <rect x="0" :y="(i-1) * (100 / 12)"
@@ -86,6 +88,7 @@ export default {
     totalTicks_: 16 * 16,
     computedWidth_: 0,
     computedHeight_: 0,
+    isWhiteKeyDown_: {},
   }),
   mounted() {
     const child = this.$refs.container;
@@ -132,11 +135,11 @@ export default {
       const startTick = x * 16;
       const endTick = startTick + 16;
       const index = this.notes.findIndex(note => note.startTick === startTick);
-        this.notes.push({
-          id: generateNoteId(),
-          pitch: 60 + (11 - y),
-          startTick, endTick,
-        });
+      this.notes.push({
+        id: generateNoteId(),
+        pitch: 60 + (11 - y),
+        startTick, endTick,
+      });
     },
     removeNote(note) {
       const index = this.notes.indexOf(note);
@@ -149,6 +152,24 @@ export default {
     resume() {
       this.playing = true;
     },
+    onWhiteKeyDown(keyNumber, e) {
+      e.target.setPointerCapture(e.pointerId);
+      const note = {
+        id: 'whiteKey' + keyNumber,
+        pitch: 60 + [0,2,4,5,7,9,11][keyNumber],
+      };
+      this.$set(this.isWhiteKeyDown_, keyNumber, true);
+      this.$emit('noteon', note);
+    },
+    onWhiteKeyUp(keyNumber, e) {
+      e.target.releasePointerCapture(e.pointerId);
+      const note = {
+        id: 'whiteKey' + keyNumber,
+        pitch: 60 + [0,2,4,5,7,9,11][keyNumber],
+      };
+      this.$set(this.isWhiteKeyDown_, keyNumber, false);
+      this.$emit('noteoff', note);
+    }
   },
   computed: {
     tickP: self => self.playmarkerPosition_ / self.totalTicks_,
@@ -201,5 +222,8 @@ body {
   fill: white;
   stroke: black;
   stroke-width: 0.5;
+  &-down {
+    fill: red;
+  }
 }
 </style>
