@@ -1,14 +1,14 @@
 <template>
-  <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <rect v-for="i in 12" v-if="[1,3,5,7,8,10,12].includes(i)" :key="'whiteKey'+i"
+  <svg width="100%" height="100%" viewBox="0 0 100 200" preserveAspectRatio="none">
+        <rect v-for="i in 24" v-if="[1,3,5,7,8,10,12].includes((i-1)%12+1)" :key="'whiteKey'+i"
             :class="['white-key', isKeyDown_[48+(12-i)] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
-            x="1" :y="[0, 0.1,  0, 12.5, 0, 29.5, 0, 46.5,  58.35, 0, 71, 0, 88][i]"
-            :height="[0, 12.5, 0, 17,   0, 17,   0, 11.75, 13, 0, 17, 0, 12][i]"
+            x="1" :y="Math.floor((i-1) / 12) * 100 + [0, 0.1,  0, 12.5, 0, 29.5, 0, 46.5,  58.35, 0, 71, 0, 88][(i-1)%12+1]"
+            :height="[0, 12.5, 0, 17,   0, 17,   0, 11.75, 13, 0, 17, 0, 12][(i-1)%12+1]"
             :data-b="i"
             @pointerdown="keyDown(48+(12-i), $event)"
             @pointerup="keyUp(48+(12-i), $event)" />
-      <rect v-for="i in 12" v-if="[2,4,6,9,11].includes(i)" :key="'blackKey'+i"
-            x="0" :y="(i-1) * 100/12"
+      <rect v-for="i in 24" v-if="[2,4,6,9,11].includes((i-1)%12+1)" :key="'blackKey'+i"
+            x="0" :y="Math.floor((i-1) / 12) * 100 + ((i-1)%12) * 100/12"
             width="63" :height="100/12"
             :class="['black-key', isKeyDown_[48+(12-i)] ? 'black-key-down' : '']"
             @pointerdown="keyDown(48+(12-i), $event)"
