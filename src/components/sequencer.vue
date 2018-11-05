@@ -157,8 +157,8 @@ body {
   fill: #575757b8;
 }
 .line-outline {
-  stroke: #484140;
+  stroke: #181717;
   fill: none;
-  stroke-width: 2px;
+  stroke-width: 1px;
 }
 </style>

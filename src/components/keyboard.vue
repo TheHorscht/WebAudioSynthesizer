@@ -2,8 +2,8 @@
   <svg width="100%" height="100%" viewBox="0 0 100 200" preserveAspectRatio="none">
         <rect v-for="i in 24" v-if="[1,3,5,7,8,10,12].includes((i-1)%12+1)" :key="'whiteKey'+i"
             :class="['white-key', isKeyDown_[48+(12-i)] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
-            x="1" :y="Math.floor((i-1) / 12) * 100 + [0, 0.1,  0, 12.5, 0, 29.5, 0, 46.5,  58.35, 0, 71, 0, 88][(i-1)%12+1]"
-            :height="[0, 12.5, 0, 17,   0, 17,   0, 11.75, 13, 0, 17, 0, 12][(i-1)%12+1]"
+            x="0" :y="Math.floor((i-1) / 12) * 100 + [0, 0,  0, 12.5, 0, 29.5, 0, 46.57,  58.33, 0, 71, 0, 88][(i-1)%12+1]"
+            :height="[0, 12.5, 0, 17,   0, 17.08,   0, 11.75, 13, 0, 17, 0, 12][(i-1)%12+1]"
             :data-b="i"
             @pointerdown="keyDown(48+(12-i), $event)"
             @pointerup="keyUp(48+(12-i), $event)" />
