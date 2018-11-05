@@ -92,7 +92,7 @@ export default {
           if(this.position == note.startTick) {
             this.$emit('noteOn', note);
           }
-          if(this.position == note.endTick) {
+          if(this.position == note.endTick - 1) {
             this.$emit('noteOff', note);
           }
         });
