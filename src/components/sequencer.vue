@@ -1,24 +1,26 @@
 <template>
   <!-- Grid -->
-  <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+  <svg width="100%" height="100%" viewBox="0 0 100 200" preserveAspectRatio="none">
     <!-- Background -->
     <rect v-for="i in 4" :key="'bgrect' + i"
           :x="(i-1) * (100/4)" width="25" 
           y="0" height="100%"
           :class="(i-1) % 2 == 0 ? 'bg1' : 'bg2'" />
-    <!-- White/Black horizontal lines -->
-    <rect v-for="i in 24" :key="'whiteBlackRect' + i"
-          :x="0" width="100%"
-          :y="(i-1) * 100 / 24" :height="100/24"
-          class="blackKeyGrid"
-          v-if="[2, 4, 6, 9, 11].includes(i%12)" />
-    <!-- Empty rects -->
-    <rect v-for="(note, i) in 24*16" :key="'emptyrect' + i"
-          :x="Math.floor(i % 16) * (100 / 16)" :width="(100 / 16)"
-          :y="Math.floor(i / 16) * (100 / 24)" :height="(100 / 24)"
-          stroke-width="0.1"
-          class="note note-empty"
-          @mousedown="placeNote(Math.floor(i % 16), Math.floor(i / 16))" />
+    <template v-for="j in 2">
+      <!-- White/Black horizontal lines -->
+      <rect v-for="i in 12" :key="'whiteBlackRect' + i+j"
+            :x="0" width="100%"
+            :y="(i-1) * 100 / 12 + (j-1) * 100" :height="100/12"
+            class="blackKeyGrid"
+            v-if="[2, 4, 6, 9, 11].includes(i%12)" />
+      <!-- Empty rects -->
+      <rect v-for="(note, i) in 12*16" :key="'emptyrect' + i+j"
+            :x="Math.floor(i % 16) * (100 / 16)" :width="(100 / 16)"
+            :y="Math.floor(i / 16) * (100 / 12) + (j-1) * 100" :height="(100 / 12)"
+            stroke-width="0.1"
+            class="note note-empty"
+            @mousedown="placeNote(Math.floor(i % 16), Math.floor(i / 16) + (j-1) * 12)" />
+    </template>
     <!-- Placed notes -->
     <rect v-for="note in notes" :key="`note${note.pitch}-${note.startTick}`"
           :x="(note.startTick / totalTicks_) * 100 + '%'" :width="(1 / 16) * 100 + '%'"
@@ -27,16 +29,23 @@
           class="note note-placed"
           @mousedown="removeNote(note)" />
     <!-- Outlines to make sections more visible -->
-<!--       <path v-for="i in 4" :key="'outline' + i"
-            d="M25 0 L0 0 0 100" :transform="`translate(${(i-1)*25},${0})`"
+    <template v-for="j in 2">
+      <path v-for="i in 4" :key="'outline1' + i + j"
+            :d="`M25 0 L0 0 0 100`"
+            :transform="`translate(${(i-1)*25}, ${(j-1)*100})`"
             class="line-outline"
             vector-effect="non-scaling-stroke" />
       <path d="M100 0 L100 100 0 100"
+            :transform="`translate(0, ${(j-1)*100})`"
+            :key="'outline2' + i + j"
             class="line-outline"
             vector-effect="non-scaling-stroke" />
       <path :d="`M0 ${100 / 12 * 7} L100 ${100 / 12 * 7}`"
+            :transform="`translate(0, ${(j-1)*100})`"
+            :key="'outline3' + i + j"
             class="line-outline"
-            vector-effect="non-scaling-stroke" /> -->
+            vector-effect="non-scaling-stroke" />
+    </template>
     <!-- Playhead -->
     <line v-if="playing"
           :x1="tickP * 100" y1="0"
