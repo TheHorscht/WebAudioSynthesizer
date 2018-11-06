@@ -36,9 +36,12 @@ export default class Voice extends Observable {
     this.gainNode.gain.value = 0.2;
     this.gainNode.connect(this.audioCtx.destination);
   }
-  noteOn(midiNote) {
+  noteOn(midiNote, time) {
+    if(!time) {
+      time = this.audioCtx.currentTime;
+    }
     this.oscillatorNode.frequency.value = midiNoteToFrequency(midiNote);
-    this.oscillatorNode.start(this.audioCtx.currentTime);
+    this.oscillatorNode.start(time);
     // this.oscillatorNode.stop(this.audioCtx.currentTime + 0.5);
     // this.biquadFilter.frequency.setValueAtTime(this.biquadFilter.frequency.value, this.audioCtx.currentTime);
     this.biquadFilter.frequency.exponentialRampToValueAtTime(1000, this.audioCtx.currentTime + 1);

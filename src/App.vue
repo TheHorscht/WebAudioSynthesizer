@@ -86,7 +86,7 @@ export default {
           voiceArray.length = 0;
         });
       } else {
-        this.$refs.sequencer.resume();
+        this.$refs.sequencer.play();
       } 
     }
   }

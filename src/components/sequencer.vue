@@ -22,8 +22,8 @@
             @mousedown="placeNote(Math.floor(i % 16), Math.floor(i / 16) + (j-1) * 12)" />
     </template>
     <!-- Placed notes -->
-    <rect v-for="note in notes" :key="`note${note.pitch}-${note.startTick}`"
-          :x="(note.startTick / totalTicks_) * 100 + '%'" :width="(1 / 16) * 100 + '%'"
+    <rect v-for="note in notes" :key="`note${note.x}-${note.y}`"
+          :x="note.x * 100 / 16" :width="100 / 16"
           :y="(11 - (note.pitch - 60)) * (1 / 24) * 100 + '%'" :height="(1 / 24) * 100 + '%'"
           stroke-width="0.1"
           class="note note-placed"
@@ -37,19 +37,19 @@
             vector-effect="non-scaling-stroke" />
       <path d="M100 0 L100 100 0 100"
             :transform="`translate(0, ${(j-1)*100})`"
-            :key="'outline2' + i + j"
+            :key="'outline2' + j"
             class="line-outline"
             vector-effect="non-scaling-stroke" />
       <path :d="`M0 ${100 / 12 * 7} L100 ${100 / 12 * 7}`"
             :transform="`translate(0, ${(j-1)*100})`"
-            :key="'outline3' + i + j"
+            :key="'outline3' + j"
             class="line-outline"
             vector-effect="non-scaling-stroke" />
     </template>
     <!-- Playhead -->
     <line v-if="playing"
-          :x1="tickP * 100" y1="0"
-          :x2="tickP * 100" y2="100%"
+          :x1="playheadPosition * 100" y1="0"
+          :x2="playheadPosition * 100" y2="100%"
           stroke-width="0.2" stroke="yellow" />
   </svg>
 </template>
@@ -58,6 +58,9 @@ const generateNoteId = (() => {
   let id = 0;
   return () => id++
 })();
+
+const audioCtx = new AudioContext();
+let lastUpdate = 0;
 
 export default {
   name: 'VueSequencer',
@@ -73,53 +76,64 @@ export default {
   },
   data: () => ({
     notes: [],
-    position: 0,
-    playmarkerPosition_: 0,
+    time: 0, // In seconds
     playing: false,
-    totalTicks_: 16 * 16,
+    bpm: 140,
+    lookahead: 0.1, // In seconds
   }),
   mounted() {
     // TODO: Make timing precise with service workers!
     // Example: https://github.com/buildist/onlinesequencer/blob/master/app/sequencer.worker.js
     // With 8ms interval between ticks @ 16 ticks per 16th note runs at 118 BPM
-    window.setInterval(this.update_, 8);
-    this.updateVisuals_();
+    this.update_();
   },
   methods: {
     update_() {
       if(this.playing) {
+        // Look which notes come in the next 100ms
+        const dt = audioCtx.currentTime - lastUpdate;
+        lastUpdate = audioCtx.currentTime;
         this.notes.forEach(note => {
-          if(this.position == note.startTick) {
-            this.$emit('noteOn', note);
+          if(this.time + this.lookahead > note.startTime + note.startIteration * (60 / this.bpm)) {
+            const delay = note.startTime - this.time;
+            this.$emit('noteOn', note, delay);
+            note.startIteration++;
           }
-          if(this.position == note.endTick - 1) {
-            this.$emit('noteOff', note);
+          if(this.time + this.lookahead > note.endTime + note.endIteration * (60 / this.bpm)) {
+            const delay = note.endTime - this.time;
+            this.$emit('noteOff', note, delay);
+            note.endIteration++;
           }
         });
-        this.position += 1;
-        this.position %= this.totalTicks_;
+        this.time += dt;
       }
-    },
-    updateVisuals_() {
-      this.playmarkerPosition_ = this.position;
-      window.requestAnimationFrame(this.updateVisuals_);
+      window.requestAnimationFrame(this.update_);
     },
     placeNote(x, y) {
-      const startTick = x * 16;
-      const endTick = startTick + 16;
-      const index = this.notes.findIndex(note => note.startTick === startTick);
+      const startTime = x * this.secondsPerSixteenthNote;
+      const endTime = startTime + 1 * this.secondsPerSixteenthNote;
       this.notes.push({
         id: generateNoteId(),
         pitch: 60 + (11 - y),
-        startTick, endTick,
+        x, y, startTime, endTime,
+        startIteration: 0,
+        endIteration: 0,
       });
     },
     removeNote(note) {
       const index = this.notes.indexOf(note);
       this.notes.splice(index, 1);
     },
+    play() {
+      this.stop();
+      this.notes.forEach(note => {
+        note.iteration = 0;
+      });
+      this.playing = true;
+    },
     stop() {
-      this.position = 0;
+      this.time = 0;
+      lastUpdate = audioCtx.currentTime;
       this.playing = false;
     },
     resume() {
@@ -127,7 +141,17 @@ export default {
     },
   },
   computed: {
-    tickP: self => self.playmarkerPosition_ / self.totalTicks_,
+    playheadPosition: self => {
+      // How many seconds it takes to get to the end of 1 measure
+      // const measureTime = (Beats per measure) / (BPM / 60)
+      const measureTime = 4 / self.bpm * 60;
+      const mtAt140BPM = 1.714; // Seconds
+      // How far are we in the current measure given current time?
+      const measurePosition = (self.time / measureTime ) % 1;
+      //const mp140_after_2_seconds = (2 / 1.714) % 1;
+      return measurePosition;
+    },
+    secondsPerSixteenthNote: self => 60 / self.bpm / 4,
   },
 }
 </script>
