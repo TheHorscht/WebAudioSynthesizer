@@ -59,7 +59,8 @@ const generateNoteId = (() => {
   return () => id++
 })();
 
-let seqStartTime = 0;
+let lastUpdate = 0;
+let sequenceStartTime = 0;
 
 export default {
   name: 'VueSequencer',
@@ -84,7 +85,8 @@ export default {
   },
   data: () => ({
     notes: [],
-    time: 0, // In seconds
+    sequencePosition: 0, // In seconds
+    sequenceCurrentLoop: 0,
     playing: false,
     lookahead: 0.1, // In seconds
   }),
@@ -93,26 +95,40 @@ export default {
     // Example: https://github.com/buildist/onlinesequencer/blob/master/app/sequencer.worker.js
     // With 8ms interval between ticks @ 16 ticks per 16th note runs at 118 BPM
     Array(16).fill(0).forEach((e, i) => {
-      this.placeNote(i, 5);
+      this.placeNote(i, i);
     });
     this.update_();
   },
   methods: {
     update_() {
       if(this.playing) {
-        this.time = this.audioContext.currentTime;
+        let dt = this.audioContext.currentTime - lastUpdate;
+        lastUpdate = this.audioContext.currentTime;
+        this.sequencePosition += dt;
+        if(this.sequencePosition > this.sequenceLength) {
+          // ??? Wrap around
+          this.sequencePosition -= this.sequenceLength;
+          // And we need to check notes I think?
+          this.sequenceCurrentLoop++;
+          sequenceStartTime = this.audioContext.currentTime - this.sequencePosition;
+        }
         this.notes.forEach(note => {
-          const noteStartTime = note.x * this.secondsPerSixteenthNote;
-          const noteEndTime = noteStartTime + 1 * this.secondsPerSixteenthNote;
-          const startTime = seqStartTime + noteStartTime + note.startIteration * (60 / this.bpm * 4);
-          if(this.time + this.lookahead > startTime) {
+          // Once we trigger a note it needs to be ignored until the next loop
+
+          const noteStartOffset = note.x * this.secondsPerSixteenthNote;
+          const startTime = sequenceStartTime + noteStartOffset;
+          if(this.audioContext.currentTime + this.lookahead > startTime
+             && note.onTriggerCount === this.sequenceCurrentLoop) {
+            note.onTriggerCount++;
             this.$emit('noteOn', { note, whenTime: startTime });
-            note.startIteration++;
           }
-          const endTime = seqStartTime + noteEndTime + note.endIteration * (60 / this.bpm * 4);
-          if(this.time + this.lookahead > endTime) {
+
+          const noteEndOffset = noteStartOffset + 1 * this.secondsPerSixteenthNote;
+          const endTime = sequenceStartTime + noteEndOffset;
+          if(this.audioContext.currentTime + this.lookahead > endTime
+             && note.offTriggerCount === this.sequenceCurrentLoop) {
+            note.offTriggerCount++;
             this.$emit('noteOff', { note, whenTime: endTime });
-            note.endIteration++;
           }
         });
       }
@@ -123,8 +139,8 @@ export default {
         id: generateNoteId(),
         pitch: 60 + (11 - y),
         x, y,
-        startIteration: 0,
-        endIteration: 0,
+        onTriggerCount: 0,
+        offTriggerCount: 0,
       });
     },
     removeNote(note) {
@@ -134,27 +150,26 @@ export default {
     play() {
       this.stop();
       this.playing = true;
-      seqStartTime = this.audioContext.currentTime;
+      sequenceStartTime = this.audioContext.currentTime;
+      lastUpdate = this.audioContext.currentTime;
     },
     stop() {
-      this.time = 0;
-      this.notes.forEach(note => {
-        note.startIteration = 0;
-        note.endIteration = 0;
-      });
+      this.sequencePosition = 0;
+      this.sequenceCurrentLoop = 0;
       this.playing = false;
+      this.notes.forEach(note => {
+        note.onTriggerCount = 0;
+        note.offTriggerCount = 0;
+      });
     },
     resume() {
       this.playing = true;
     },
   },
   computed: {
-    playheadPosition: self => {
-      const measureTime = 4 / self.bpm * 60;
-      const measurePosition = (self.time / measureTime ) % 1;
-      return measurePosition;
-    },
+    playheadPosition: self => self.sequencePosition / self.sequenceLength,
     secondsPerSixteenthNote: self => 60 / self.bpm / 4,
+    sequenceLength: self => self.secondsPerSixteenthNote * 16,
   },
 }
 </script>
