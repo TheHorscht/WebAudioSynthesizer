@@ -39,8 +39,6 @@ const generateNewId = (() => {
 
 window.voices = voices;
 
-let lastWhenTime = 0;
-
 export default {
   name: 'app',
   components: {
@@ -58,11 +56,9 @@ export default {
   },
   methods: {
     onKeyboardNoteOn({ pitch, id }) {
-      console.log(`NoteOn. Pitch: ${pitch}, Id: ${id}`);
       this.noteOn(id, pitch);
     },
     onKeyboardNoteOff({ pitch, id }) {
-      console.log(`NoteOff. Pitch: ${pitch}, Id: ${id}`);
       this.noteOff(id, pitch);
     },
     onSequencerNoteOn({ note, whenTime }) {
@@ -82,8 +78,6 @@ export default {
       } else {
         voices[id] = [voice];
       }
-      console.log("whenD: " + (whenTime - lastWhenTime));
-      lastWhenTime = whenTime;
       voice.noteOn(pitch, whenTime);
       voice.addEventListener('voiceDonePlaying', () => {
         // voices[id].pop();

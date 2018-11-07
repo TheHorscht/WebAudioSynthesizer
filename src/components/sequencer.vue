@@ -151,13 +151,8 @@ export default {
   },
   computed: {
     playheadPosition: self => {
-      // How many seconds it takes to get to the end of 1 measure
-      // const measureTime = (Beats per measure) / (BPM / 60)
       const measureTime = 4 / self.bpm * 60;
-      const mtAt140BPM = 1.714; // Seconds
-      // How far are we in the current measure given current time?
       const measurePosition = (self.time / measureTime ) % 1;
-      //const mp140_after_2_seconds = (2 / 1.714) % 1;
       return measurePosition;
     },
     secondsPerSixteenthNote: self => 60 / self.bpm / 4,
