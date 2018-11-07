@@ -13,10 +13,11 @@
       <span>D</span>
       <span>R</span>
     </div>
-    <vue-slider v-bind="sliderConfig.horizontal" />
+    <vue-slider v-bind="sliderConfig.horizontal" :min="80" :max="200" v-model="bpm"/>
     <div class="kb-and-sequencer">
       <vue-keyboard ref="keyboard" @noteOn="onKeyboardNoteOn" @noteOff="onKeyboardNoteOff"/>
-      <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff" :audioContext="audioCtx" />
+      <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff" :audioContext="audioCtx"
+                     :bpm="bpm" />
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
   </div>
@@ -38,6 +39,8 @@ const generateNewId = (() => {
 
 window.voices = voices;
 
+let lastWhenTime = 0;
+
 export default {
   name: 'app',
   components: {
@@ -49,40 +52,47 @@ export default {
   data: () => ({
     sliderConfig,
     audioCtx: new AudioContext(),
+    bpm: 120,
   }),
   mounted () {
   },
   methods: {
     onKeyboardNoteOn({ pitch, id }) {
       console.log(`NoteOn. Pitch: ${pitch}, Id: ${id}`);
-      this.noteOn(id, pitch, 0);
+      this.noteOn(id, pitch);
     },
     onKeyboardNoteOff({ pitch, id }) {
       console.log(`NoteOff. Pitch: ${pitch}, Id: ${id}`);
-      this.noteOff(id, pitch, 0);
+      this.noteOff(id, pitch);
     },
-    onSequencerNoteOn({ pitch, id, delay }) {
+    onSequencerNoteOn({ note, whenTime }) {
+      const { pitch, id } = note;
       this.$refs.keyboard.keyDown(pitch - 12, false);
+      this.noteOn(id, pitch, whenTime);
     },
-    onSequencerNoteOff({ pitch, id, delay }) {
+    onSequencerNoteOff({ note, whenTime }) {
+      const { pitch, id } = note;
       this.$refs.keyboard.keyUp(pitch - 12, false);
+      this.noteOff(id, pitch, whenTime);
     },
-    noteOn(id, pitch, delay) {
+    noteOn(id, pitch, whenTime) {
       const voice = new Voice(this.audioCtx);
       if(id in voices) {
         voices[id].push(voice);
       } else {
         voices[id] = [voice];
       }
-      voice.noteOn(pitch, delay);
+      console.log("whenD: " + (whenTime - lastWhenTime));
+      lastWhenTime = whenTime;
+      voice.noteOn(pitch, whenTime);
       voice.addEventListener('voiceDonePlaying', () => {
         // voices[id].pop();
       });
     },
-    noteOff(id, pitch, delay) {
+    noteOff(id, pitch, whenTime) {
       if(id in voices) {
         let voice = voices[id].pop();
-        voice.noteOff(delay);
+        voice.noteOff(whenTime);
       }
     },
     togglePlaying() {

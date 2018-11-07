@@ -75,14 +75,18 @@ export default {
     audioContext: {
       type: AudioContext,
       required: true,
-    }
+    },
+    bpm: {
+      type: Number,
+      default: 120,
+      required: true,
+    },
   },
   data: () => ({
     notes: [],
     time: 0, // In seconds
     playing: false,
-    bpm: 120,
-    lookahead: 1.1, // In seconds
+    lookahead: 0.1, // In seconds
   }),
   mounted() {
     // TODO: Make timing precise with service workers!
@@ -96,25 +100,20 @@ export default {
   methods: {
     update_() {
       if(this.playing) {
+        this.time = this.audioContext.currentTime;
         // Look which notes come in the next 100ms
-        const dt = this.audioContext.currentTime - lastUpdate;
-        lastUpdate = this.audioContext.currentTime;
         this.notes.forEach(note => {
-          const startTime = note.startTime + note.startIteration * (60 / this.bpm * 4);
+          const startTime = seqStartTime + note.startTime + note.startIteration * (60 / this.bpm * 4);
           if(this.time + this.lookahead > startTime) {
-            const delay = startTime - this.time;
-            this.$emit('noteOn', { note, delay });
+            this.$emit('noteOn', { note, whenTime: startTime });
             note.startIteration++;
           }
-          const endTime = note.endTime + note.endIteration * (60 / this.bpm * 4);
+          const endTime = seqStartTime + note.endTime + note.endIteration * (60 / this.bpm * 4);
           if(this.time + this.lookahead > endTime) {
-            const delay = endTime - this.time;
-            this.$emit('noteOff', { note, delay });
+            this.$emit('noteOff', { note, whenTime: endTime });
             note.endIteration++;
           }
         });
-        //this.time += dt;
-        this.time = this.audioContext.currentTime;
       }
       window.requestAnimationFrame(this.update_);
     },
@@ -140,7 +139,6 @@ export default {
     },
     stop() {
       this.time = 0;
-      lastUpdate = this.audioContext.currentTime;
       this.notes.forEach(note => {
         note.startIteration = 0;
         note.endIteration = 0;
