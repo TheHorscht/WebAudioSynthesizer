@@ -13,7 +13,10 @@
       <span>D</span>
       <span>R</span>
     </div>
-    <vue-slider v-bind="sliderConfig.horizontal" :min="80" :max="200" v-model="bpm"/>
+    <div>
+      <vue-slider v-bind="sliderConfig.horizontal" :min="80" :max="200" v-model="bpm"/>
+      BPM: {{ bpm }}
+    </div>
     <div class="kb-and-sequencer">
       <vue-keyboard ref="keyboard" @noteOn="onKeyboardNoteOn" @noteOff="onKeyboardNoteOff"/>
       <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff" :audioContext="audioCtx"

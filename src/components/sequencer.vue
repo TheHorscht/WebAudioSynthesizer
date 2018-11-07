@@ -101,14 +101,15 @@ export default {
     update_() {
       if(this.playing) {
         this.time = this.audioContext.currentTime;
-        // Look which notes come in the next 100ms
         this.notes.forEach(note => {
-          const startTime = seqStartTime + note.startTime + note.startIteration * (60 / this.bpm * 4);
+          const noteStartTime = note.x * this.secondsPerSixteenthNote;
+          const noteEndTime = noteStartTime + 1 * this.secondsPerSixteenthNote;
+          const startTime = seqStartTime + noteStartTime + note.startIteration * (60 / this.bpm * 4);
           if(this.time + this.lookahead > startTime) {
             this.$emit('noteOn', { note, whenTime: startTime });
             note.startIteration++;
           }
-          const endTime = seqStartTime + note.endTime + note.endIteration * (60 / this.bpm * 4);
+          const endTime = seqStartTime + noteEndTime + note.endIteration * (60 / this.bpm * 4);
           if(this.time + this.lookahead > endTime) {
             this.$emit('noteOff', { note, whenTime: endTime });
             note.endIteration++;
@@ -118,12 +119,10 @@ export default {
       window.requestAnimationFrame(this.update_);
     },
     placeNote(x, y) {
-      const startTime = x * this.secondsPerSixteenthNote;
-      const endTime = startTime + 1 * this.secondsPerSixteenthNote * 0.25;
       this.notes.push({
         id: generateNoteId(),
         pitch: 60 + (11 - y),
-        x, y, startTime, endTime,
+        x, y,
         startIteration: 0,
         endIteration: 0,
       });

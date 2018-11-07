@@ -41,7 +41,7 @@ export default class Voice extends Observable {
     this.oscillatorNode.start(whenTime);
     // this.oscillatorNode.stop(this.audioCtx.currentTime + 0.5);
     // this.biquadFilter.frequency.setValueAtTime(this.biquadFilter.frequency.value, this.audioCtx.currentTime);
-    this.biquadFilter.frequency.exponentialRampToValueAtTime(1000, whenTime + 1);
+    this.biquadFilter.frequency.exponentialRampToValueAtTime(1000, whenTime + 0.3);
   }
   noteOff(whenTime = this.audioCtx.currentTime) {
     // https://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
