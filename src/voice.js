@@ -36,22 +36,20 @@ export default class Voice extends Observable {
     this.gainNode.gain.value = 0.2;
     this.gainNode.connect(this.audioCtx.destination);
   }
-  noteOn(midiNote, time) {
-    if(!time) {
-      time = this.audioCtx.currentTime;
-    }
+  noteOn(midiNote, delay = 0) {
     this.oscillatorNode.frequency.value = midiNoteToFrequency(midiNote);
-    this.oscillatorNode.start(time);
+    this.oscillatorNode.start(this.audioCtx.currentTime + delay);
     // this.oscillatorNode.stop(this.audioCtx.currentTime + 0.5);
     // this.biquadFilter.frequency.setValueAtTime(this.biquadFilter.frequency.value, this.audioCtx.currentTime);
     this.biquadFilter.frequency.exponentialRampToValueAtTime(1000, this.audioCtx.currentTime + 1);
   }
-  noteOff() {
+  noteOff(delay = 0) {
     // https://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
     // TODO: Trigger release envelope
     // Important! Setting a scheduled parameter value
-    this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, this.audioCtx.currentTime);
-    this.gainNode.gain.exponentialRampToValueAtTime(0.0000001, this.audioCtx.currentTime + 0.03);
+    this.oscillatorNode.stop(this.audioCtx.currentTime + delay);
+    /* this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, this.audioCtx.currentTime);
+    this.gainNode.gain.exponentialRampToValueAtTime(0.0000001, this.audioCtx.currentTime + 0.03 + delay); */
     window.setTimeout(() => {
       this.dispatchEvent('voiceDonePlaying')
     }, 50);

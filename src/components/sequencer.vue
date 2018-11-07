@@ -59,8 +59,7 @@ const generateNoteId = (() => {
   return () => id++
 })();
 
-const audioCtx = new AudioContext();
-let lastUpdate = 0;
+let seqStartTime = 0;
 
 export default {
   name: 'VueSequencer',
@@ -73,45 +72,55 @@ export default {
       type: Number,
       default: 400,
     },
+    audioContext: {
+      type: AudioContext,
+      required: true,
+    }
   },
   data: () => ({
     notes: [],
     time: 0, // In seconds
     playing: false,
-    bpm: 140,
-    lookahead: 0.1, // In seconds
+    bpm: 120,
+    lookahead: 1.1, // In seconds
   }),
   mounted() {
     // TODO: Make timing precise with service workers!
     // Example: https://github.com/buildist/onlinesequencer/blob/master/app/sequencer.worker.js
     // With 8ms interval between ticks @ 16 ticks per 16th note runs at 118 BPM
+    Array(16).fill(0).forEach((e, i) => {
+      this.placeNote(i, 5);
+    });
     this.update_();
   },
   methods: {
     update_() {
       if(this.playing) {
         // Look which notes come in the next 100ms
-        const dt = audioCtx.currentTime - lastUpdate;
-        lastUpdate = audioCtx.currentTime;
+        const dt = this.audioContext.currentTime - lastUpdate;
+        lastUpdate = this.audioContext.currentTime;
         this.notes.forEach(note => {
-          if(this.time + this.lookahead > note.startTime + note.startIteration * (60 / this.bpm)) {
-            const delay = note.startTime - this.time;
-            this.$emit('noteOn', note, delay);
+          const startTime = note.startTime + note.startIteration * (60 / this.bpm * 4);
+          if(this.time + this.lookahead > startTime) {
+            const delay = startTime - this.time;
+            this.$emit('noteOn', { note, delay });
             note.startIteration++;
           }
-          if(this.time + this.lookahead > note.endTime + note.endIteration * (60 / this.bpm)) {
-            const delay = note.endTime - this.time;
-            this.$emit('noteOff', note, delay);
+          const endTime = note.endTime + note.endIteration * (60 / this.bpm * 4);
+          if(this.time + this.lookahead > endTime) {
+            const delay = endTime - this.time;
+            this.$emit('noteOff', { note, delay });
             note.endIteration++;
           }
         });
-        this.time += dt;
+        //this.time += dt;
+        this.time = this.audioContext.currentTime;
       }
       window.requestAnimationFrame(this.update_);
     },
     placeNote(x, y) {
       const startTime = x * this.secondsPerSixteenthNote;
-      const endTime = startTime + 1 * this.secondsPerSixteenthNote;
+      const endTime = startTime + 1 * this.secondsPerSixteenthNote * 0.25;
       this.notes.push({
         id: generateNoteId(),
         pitch: 60 + (11 - y),
@@ -126,14 +135,16 @@ export default {
     },
     play() {
       this.stop();
-      this.notes.forEach(note => {
-        note.iteration = 0;
-      });
       this.playing = true;
+      seqStartTime = this.audioContext.currentTime;
     },
     stop() {
       this.time = 0;
-      lastUpdate = audioCtx.currentTime;
+      lastUpdate = this.audioContext.currentTime;
+      this.notes.forEach(note => {
+        note.startIteration = 0;
+        note.endIteration = 0;
+      });
       this.playing = false;
     },
     resume() {

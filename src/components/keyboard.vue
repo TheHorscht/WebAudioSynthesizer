@@ -5,14 +5,14 @@
             x="0" :y="Math.floor((i-1) / 12) * 100 + [0, 0,  0, 12.5, 0, 29.5, 0, 46.57,  58.33, 0, 71, 0, 88][(i-1)%12+1]"
             :height="[0, 12.5, 0, 17,   0, 17.08,   0, 11.75, 13, 0, 17, 0, 12][(i-1)%12+1]"
             :data-b="i"
-            @pointerdown="keyDown(48+(12-i), $event)"
-            @pointerup="keyUp(48+(12-i), $event)" />
+            @pointerdown="keyDown(48+(12-i), true, $event)"
+            @pointerup="keyUp(48+(12-i), true, $event)" />
       <rect v-for="i in 24" v-if="[2,4,6,9,11].includes((i-1)%12+1)" :key="'blackKey'+i"
             x="0" :y="Math.floor((i-1) / 12) * 100 + ((i-1)%12) * 100/12"
             width="63" :height="100/12"
             :class="['black-key', isKeyDown_[48+(12-i)] ? 'black-key-down' : '']"
-            @pointerdown="keyDown(48+(12-i), $event)"
-            @pointerup="keyUp(48+(12-i), $event)" />
+            @pointerdown="keyDown(48+(12-i), true, $event)"
+            @pointerup="keyUp(48+(12-i), true, $event)" />
   </svg>
 </template>
 <script>
@@ -72,7 +72,7 @@ export default {
           pitch: keysToMidiNote[e.code],
         };
         // this.$emit('noteOn', note);
-        this.keyDown(keysToMidiNote[e.code]);
+        this.keyDown(keysToMidiNote[e.code], true);
       }
     });
     window.addEventListener('key-event-up', e => {
@@ -82,11 +82,11 @@ export default {
         pitch: keysToMidiNote[e.code],
       };
       // this.$emit('noteOff', note);
-      this.keyUp(keysToMidiNote[e.code]);
+      this.keyUp(keysToMidiNote[e.code], true);
     });
   },
   methods: {
-    keyDown(keyNumber, e) {
+    keyDown(keyNumber, triggerEventEmit, e) {
       if(e) {
         e.target.setPointerCapture(e.pointerId);
       }
@@ -95,9 +95,11 @@ export default {
         pitch: keyNumber,
       };
       this.$set(this.isKeyDown_, keyNumber, true);
-      this.$emit('noteOn', note);
+      if(triggerEventEmit) {
+        this.$emit('noteOn', note);
+      }
     },
-    keyUp(keyNumber, e) {
+    keyUp(keyNumber, triggerEventEmit, e) {
       if(e) {
         e.target.releasePointerCapture(e.pointerId);
       }
@@ -107,7 +109,9 @@ export default {
           pitch: keyNumber,
         };
         this.$set(this.isKeyDown_, keyNumber, false);
-        this.$emit('noteOff', note);
+        if(triggerEventEmit) {
+          this.$emit('noteOff', note);
+        }
       }
     },
     releaseAllKeys() {

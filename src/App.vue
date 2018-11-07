@@ -15,8 +15,8 @@
     </div>
     <vue-slider v-bind="sliderConfig.horizontal" />
     <div class="kb-and-sequencer">
-      <vue-keyboard ref="keyboard" @noteOn="noteOn($event, 'kb')" @noteOff="noteOff($event, 'kb')"/>
-      <vue-sequencer ref="sequencer" @noteOn="noteOn($event, 'sq')" @noteOff="noteOff($event, 'sq')" />
+      <vue-keyboard ref="keyboard" @noteOn="onKeyboardNoteOn" @noteOff="onKeyboardNoteOff"/>
+      <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff" :audioContext="audioCtx" />
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
   </div>
@@ -30,12 +30,13 @@ import vueSequencer from './components/sequencer'
 import sliderConfig from './slider-config'
 import Voice from './voice'
 
-const audioCtx = new AudioContext();
 const voices = {};
 const generateNewId = (() => {
   let c = 0;
   return () => c++;
 })();
+
+window.voices = voices;
 
 export default {
   name: 'app',
@@ -47,34 +48,41 @@ export default {
   },
   data: () => ({
     sliderConfig,
+    audioCtx: new AudioContext(),
   }),
   mounted () {
   },
   methods: {
-    noteOn({ pitch, id }, source) {
-      if(source === 'sq') {
-        this.$refs.keyboard.keyDown(pitch - 12);
-      } else {
-        const voice = new Voice(audioCtx);
-        if(id in voices) {
-          voices[id].push(voice);
-        } else {
-          voices[id] = [voice];
-        }
-        voice.noteOn(pitch);
-        voice.addEventListener('voiceDonePlaying', () => {
-          // voices[id].pop();
-        });
-      }
+    onKeyboardNoteOn({ pitch, id }) {
+      console.log(`NoteOn. Pitch: ${pitch}, Id: ${id}`);
+      this.noteOn(id, pitch, 0);
     },
-    noteOff({ pitch, id }, source) {
-      if(source === 'sq') {
-        this.$refs.keyboard.keyUp(pitch - 12);
+    onKeyboardNoteOff({ pitch, id }) {
+      console.log(`NoteOff. Pitch: ${pitch}, Id: ${id}`);
+      this.noteOff(id, pitch, 0);
+    },
+    onSequencerNoteOn({ pitch, id, delay }) {
+      this.$refs.keyboard.keyDown(pitch - 12, false);
+    },
+    onSequencerNoteOff({ pitch, id, delay }) {
+      this.$refs.keyboard.keyUp(pitch - 12, false);
+    },
+    noteOn(id, pitch, delay) {
+      const voice = new Voice(this.audioCtx);
+      if(id in voices) {
+        voices[id].push(voice);
       } else {
-        if(id in voices) {
-          let voice = voices[id].pop();
-          voice.noteOff();
-        }
+        voices[id] = [voice];
+      }
+      voice.noteOn(pitch, delay);
+      voice.addEventListener('voiceDonePlaying', () => {
+        // voices[id].pop();
+      });
+    },
+    noteOff(id, pitch, delay) {
+      if(id in voices) {
+        let voice = voices[id].pop();
+        voice.noteOff(delay);
       }
     },
     togglePlaying() {
