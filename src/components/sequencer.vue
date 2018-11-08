@@ -56,7 +56,7 @@
 <script>
 const generateNoteId = (() => {
   let id = 0;
-  return () => id++
+  return () => 'sq' + id++
 })();
 
 let lastUpdate = 0;
@@ -88,7 +88,7 @@ export default {
     sequencePosition: 0, // In seconds
     sequenceCurrentLoop: 0,
     playing: false,
-    lookahead: 0.1, // In seconds
+    lookahead: 1.0, // In seconds
   }),
   mounted() {
     // TODO: Make timing precise with service workers!
