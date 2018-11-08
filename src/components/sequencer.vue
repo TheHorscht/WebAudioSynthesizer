@@ -95,7 +95,7 @@ export default {
     // Example: https://github.com/buildist/onlinesequencer/blob/master/app/sequencer.worker.js
     // With 8ms interval between ticks @ 16 ticks per 16th note runs at 118 BPM
     Array(16).fill(0).forEach((e, i) => {
-      this.placeNote(i, 10);
+      // this.placeNote(i, 10);
     });
     this.update_();
   },
@@ -110,26 +110,29 @@ export default {
           this.sequencePosition -= this.sequenceLength;
           // And we need to check notes I think?
           this.sequenceCurrentLoop++;
-          sequenceStartTime = this.audioContext.currentTime - this.sequencePosition;
+          // sequenceStartTime = this.audioContext.currentTime - this.sequencePosition;
         }
         this.notes.forEach(note => {
           // Once we trigger a note it needs to be ignored until the next loop
 
           const noteStartOffset = note.x * this.secondsPerSixteenthNote;
+          // We need to calculate when the next note should play
           const startTime = sequenceStartTime + noteStartOffset;
-          if(this.audioContext.currentTime + this.lookahead > startTime
+          const newOnStartTime = sequenceStartTime + noteStartOffset + note.onTriggerCount * this.sequenceLength;
+          if(this.audioContext.currentTime + this.lookahead > newOnStartTime
              && note.onTriggerCount === this.sequenceCurrentLoop) {
             note.onTriggerCount++;
-            console.log("Noteon! %o %o", note, startTime)
-            this.$emit('noteOn', { note, whenTime: startTime });
+            console.log("Noteon! %o %o", note, newOnStartTime)
+            this.$emit('noteOn', { note, whenTime: newOnStartTime });
           }
 
           const noteEndOffset = noteStartOffset + 1 * this.secondsPerSixteenthNote;
           const endTime = sequenceStartTime + noteEndOffset;
-          if(this.audioContext.currentTime + this.lookahead > endTime
+          const newOffStartTime = sequenceStartTime + noteEndOffset + note.offTriggerCount * this.sequenceLength;
+          if(this.audioContext.currentTime + this.lookahead > newOffStartTime
              && note.offTriggerCount === this.sequenceCurrentLoop) {
             note.offTriggerCount++;
-            this.$emit('noteOff', { note, whenTime: endTime });
+            this.$emit('noteOff', { note, whenTime: newOffStartTime });
           }
         });
       }
@@ -149,6 +152,36 @@ export default {
     removeNote(note) {
       const index = this.notes.indexOf(note);
       this.notes.splice(index, 1);
+    },
+    getUpcomingNoteOnEvents(playheadPositionPercent, lookahead) {
+      const upcomingEvents = [];
+      // We need to calculate when the next note should play
+      const playheadTime = playheadPositionPercent * this.sequenceLength;
+      // We need to check if the noteOn event is inside an interval of [playhead <-> playhead + lookahead]
+      // if playhead + lookahead is greater than sequenceLength we clamp it to [playhead <-> sequenceLength]
+      // and do ANOTHER check for the remaining duration from [sequenceStart <-> remaining]
+      // where the overshoot is: playhead + lookahead - sequenceLength
+      // e.g.: 1.9 + 2 - 2
+      // If that is positive then we overshot
+      const getNotesInInterval = (startTime, endTime) => {
+        return this.notes.filter(note => {
+          const noteStartOffset = note.x * this.secondsPerSixteenthNote;
+          return noteStartOffset >= startTime && noteStartOffset <= endTime;
+        });
+      }
+
+      const overshoot = playheadTime + lookahead - this.sequenceLength;
+      if(overshoot > 0) {
+        const notesAtEnd = getNotesInInterval(playheadTime, this.sequenceLength);
+        const notesAtStart = getNotesInInterval(0, overshoot);
+        upcomingEvents.push(...notesAtEnd);
+        upcomingEvents.push(...notesAtStart);
+        console.log(overshoot)
+      } else {
+        const notes = getNotesInInterval(playheadTime, playheadTime + lookahead);
+        upcomingEvents.push(...notes);
+      }
+      return upcomingEvents;
     },
     play() {
       this.stop();
