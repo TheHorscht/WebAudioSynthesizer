@@ -27,31 +27,44 @@ export default class Voice extends Observable {
     this.gainNode = audioCtx.createGain();
 
     this.oscillatorNode.type = SHAPES.sawtooth;
-    this.oscillatorNode.connect(this.biquadFilter);
-
+    
     this.biquadFilter.type = 'lowpass';
-    this.biquadFilter.frequency.setValueAtTime(20000, audioCtx.currentTime);
+    
+    this.oscillatorNode.connect(this.biquadFilter);
     this.biquadFilter.connect(this.gainNode);
-
-    this.gainNode.gain.value = 0.2;
     this.gainNode.connect(this.audioCtx.destination);
   }
   noteOn(midiNote, whenTime = this.audioCtx.currentTime) {
+    if(whenTime < this.audioCtx.currentTime) {
+      whenTime = this.audioCtx.currentTime;
+    }
+    this.biquadFilter.frequency.value = 20000;
+    this.biquadFilter.frequency.exponentialRampToValueAtTime(1000, whenTime + 0.3);
+
+    this.gainNode.gain.value = 0.02;
     this.oscillatorNode.frequency.value = midiNoteToFrequency(midiNote);
     this.oscillatorNode.start(whenTime);
-    // this.oscillatorNode.stop(this.audioCtx.currentTime + 0.5);
-    // this.biquadFilter.frequency.setValueAtTime(this.biquadFilter.frequency.value, this.audioCtx.currentTime);
-    this.biquadFilter.frequency.exponentialRampToValueAtTime(1000, whenTime + 0.3);
+    // console.log(`%cOn!%c whenTime: ${whenTime}, currentTime: ${this.audioCtx.currentTime}`, 'background: green;', null)
+    // console.log(this.gainNode.gain.value)
   }
   noteOff(whenTime = this.audioCtx.currentTime) {
     // https://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
     // TODO: Trigger release envelope
     // Important! Setting a scheduled parameter value
-    this.oscillatorNode.stop(whenTime);
-    /* this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, this.audioCtx.currentTime);
-    this.gainNode.gain.exponentialRampToValueAtTime(0.0000001, this.audioCtx.currentTime + 0.03 + delay); */
+    if(whenTime < this.audioCtx.currentTime) {
+      whenTime = this.audioCtx.currentTime;
+    }
+    this.oscillatorNode.stop(whenTime + 3);
+    window.setTimeout(() => {
+      this.gainNode.disconnect();
+      this.biquadFilter.disconnect();
+    }, 3000);
+    // this.gainNode.gain.cancelScheduledValues(whenTime);
+    this.gainNode.gain.setValueAtTime(this.gainNode.gain.value, whenTime);
+    this.gainNode.gain.exponentialRampToValueAtTime(0.00001, whenTime + 3);
     window.setTimeout(() => {
       this.dispatchEvent('voiceDonePlaying')
     }, 50);
+    // console.log(`%cOff!%c whenTime: ${whenTime}, currentTime: ${this.audioCtx.currentTime}`, 'background: red;', null)
   }
 }

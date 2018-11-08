@@ -40,6 +40,8 @@ const generateNewId = (() => {
   return () => c++;
 })();
 
+let keyboardTimeouts = [];
+
 window.voices = voices;
 
 export default {
@@ -66,12 +68,29 @@ export default {
     },
     onSequencerNoteOn({ note, whenTime }) {
       const { pitch, id } = note;
-      this.$refs.keyboard.keyDown(pitch - 12, false);
+      const delay = whenTime - this.audioCtx.currentTime;
+
+      const timeout = window.setTimeout(() => {
+        this.$refs.keyboard.keyDown(pitch - 12, false);
+        let index = keyboardTimeouts.indexOf(timeout);
+        keyboardTimeouts.splice(index, 1);
+      }, delay * 1000);
+      keyboardTimeouts.push(timeout);
+
+      // this.noteOn(id, pitch, whenTime);
       this.noteOn(id, pitch, whenTime);
     },
     onSequencerNoteOff({ note, whenTime }) {
       const { pitch, id } = note;
-      this.$refs.keyboard.keyUp(pitch - 12, false);
+      const delay = whenTime - this.audioCtx.currentTime;
+
+      const timeout = window.setTimeout(() => {
+        this.$refs.keyboard.keyUp(pitch - 12, false);
+        let index = keyboardTimeouts.indexOf(timeout);
+        keyboardTimeouts.splice(index, 1);
+      }, delay * 1000);
+      keyboardTimeouts.push(timeout);
+
       this.noteOff(id, pitch, whenTime);
     },
     noteOn(id, pitch, whenTime) {
@@ -81,6 +100,10 @@ export default {
       } else {
         voices[id] = [voice];
       }
+      // console.log(`%cOn!%c whenTime: ${whenTime}, currentTime: ${this.audioCtx.currentTime}, id: ${id}`, 'background: green;', null)
+    if(whenTime < this.audioCtx.currentTime) {
+      whenTime = this.audioCtx.currentTime;
+    }
       voice.noteOn(pitch, whenTime);
       voice.addEventListener('voiceDonePlaying', () => {
         // voices[id].pop();
@@ -90,12 +113,17 @@ export default {
       if(id in voices) {
         let voice = voices[id].pop();
         voice.noteOff(whenTime);
+        // console.log(`%cOff!%c whenTime: ${whenTime}, currentTime: ${this.audioCtx.currentTime}, id: ${id}`, 'background: red;', null)
       }
     },
     togglePlaying() {
       if(this.$refs.sequencer.playing) {
         this.$refs.sequencer.stop();
         this.$refs.keyboard.releaseAllKeys();
+        keyboardTimeouts.forEach(timeout => {
+          window.clearTimeout(timeout);
+        })
+        keyboardTimeouts = [];
         Object.values(voices).forEach(voiceArray => {
           voiceArray.forEach(voice => voice.noteOff());
           voiceArray.length = 0;

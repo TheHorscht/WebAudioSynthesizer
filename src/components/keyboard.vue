@@ -94,10 +94,10 @@ export default {
         id: 'kb' + keyNumber,
         pitch: keyNumber,
       };
-      this.$set(this.isKeyDown_, keyNumber, true);
-      if(triggerEventEmit) {
+      if(triggerEventEmit && !this.isKeyDown_[keyNumber]) {
         this.$emit('noteOn', note);
       }
+      this.$set(this.isKeyDown_, keyNumber, true);
     },
     keyUp(keyNumber, triggerEventEmit, e) {
       if(e) {
@@ -108,10 +108,10 @@ export default {
           id: 'kb' + keyNumber,
           pitch: keyNumber,
         };
-        this.$set(this.isKeyDown_, keyNumber, false);
-        if(triggerEventEmit) {
+        if(triggerEventEmit && this.isKeyDown_[keyNumber]) {
           this.$emit('noteOff', note);
         }
+        this.$set(this.isKeyDown_, keyNumber, false);
       }
     },
     releaseAllKeys() {

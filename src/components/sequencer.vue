@@ -88,14 +88,14 @@ export default {
     sequencePosition: 0, // In seconds
     sequenceCurrentLoop: 0,
     playing: false,
-    lookahead: 1.0, // In seconds
+    lookahead: 0.1, // In seconds
   }),
   mounted() {
     // TODO: Make timing precise with service workers!
     // Example: https://github.com/buildist/onlinesequencer/blob/master/app/sequencer.worker.js
     // With 8ms interval between ticks @ 16 ticks per 16th note runs at 118 BPM
     Array(16).fill(0).forEach((e, i) => {
-      this.placeNote(i, i);
+      this.placeNote(i, 10);
     });
     this.update_();
   },
@@ -120,6 +120,7 @@ export default {
           if(this.audioContext.currentTime + this.lookahead > startTime
              && note.onTriggerCount === this.sequenceCurrentLoop) {
             note.onTriggerCount++;
+            console.log("Noteon! %o %o", note, startTime)
             this.$emit('noteOn', { note, whenTime: startTime });
           }
 
@@ -135,12 +136,14 @@ export default {
       window.requestAnimationFrame(this.update_);
     },
     placeNote(x, y) {
+      const posP = x / 16.0;
+      const bonus = posP > this.playheadPosition ? 0 : 1;
       this.notes.push({
         id: generateNoteId(),
         pitch: 60 + (11 - y),
         x, y,
-        onTriggerCount: 0,
-        offTriggerCount: 0,
+        onTriggerCount: this.sequenceCurrentLoop + bonus,
+        offTriggerCount: this.sequenceCurrentLoop + bonus,
       });
     },
     removeNote(note) {
