@@ -24,7 +24,7 @@
     <!-- Placed notes -->
     <rect v-for="note in notes" :key="`note${note.x}-${note.y}`"
           :x="note.x * 100 / 16" :width="100 / 16"
-          :y="(11 - (note.pitch - 60)) * (1 / 24) * 100 + '%'" :height="(1 / 24) * 100 + '%'"
+          :y="note.y * (1 / 12) * 100" :height="(1 / 24) * 100 + '%'"
           stroke-width="0.1"
           class="note note-placed"
           @mousedown="removeNote(note)" />
@@ -133,7 +133,7 @@ export default {
       const bonus = posP > this.playheadPosition ? 0 : 1;
       this.notes.push({
         id: generateNoteId(),
-        pitch: 60 + (11 - y),
+        pitch: 59 - y, // y geht von 0 bis 23
         x, y,
         onTriggerCount: this.sequenceCurrentLoop + bonus,
         offTriggerCount: this.sequenceCurrentLoop + bonus,
@@ -156,7 +156,7 @@ export default {
                 && note.onTriggerCount === this.sequenceCurrentLoop + loopCompensation;
           }),
           off: this.notes.filter(note => {
-            const noteEndOffset = note.x * this.secondsPerSixteenthNote + this.secondsPerSixteenthNote * 0.5;
+            const noteEndOffset = note.x * this.secondsPerSixteenthNote + this.secondsPerSixteenthNote * 2;
             return noteEndOffset >= startTime
                 && noteEndOffset <= endTime
                 && note.offTriggerCount === this.sequenceCurrentLoop + loopCompensation;
@@ -197,6 +197,11 @@ export default {
     resume() {
       this.playing = true;
     },
+  },
+  watch: {
+    bpm(newBPM, oldBPM) {
+      console.log(newBPM, oldBPM);
+    }
   },
   computed: {
     playheadPosition: self => self.sequencePosition / self.sequenceLength,

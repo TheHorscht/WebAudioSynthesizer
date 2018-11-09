@@ -71,7 +71,7 @@ export default {
       const delay = whenTime - this.audioCtx.currentTime;
 
       const timeout = window.setTimeout(() => {
-        this.$refs.keyboard.keyDown(pitch - 12, false);
+        this.$refs.keyboard.keyDown(pitch, false);
         let index = keyboardTimeouts.indexOf(timeout);
         keyboardTimeouts.splice(index, 1);
       }, delay * 1000);
@@ -85,7 +85,7 @@ export default {
       const delay = whenTime - this.audioCtx.currentTime;
 
       const timeout = window.setTimeout(() => {
-        this.$refs.keyboard.keyUp(pitch - 12, false);
+        this.$refs.keyboard.keyUp(pitch, false);
         let index = keyboardTimeouts.indexOf(timeout);
         keyboardTimeouts.splice(index, 1);
       }, delay * 1000);
@@ -100,7 +100,6 @@ export default {
       } else {
         voices[id] = [voice];
       }
-      console.log(`%cOn!%c whenTime: ${whenTime}, currentTime: ${this.audioCtx.currentTime}, id: ${id}`, 'background: green;', null)
       voice.noteOn(pitch, whenTime);
       voice.addEventListener('voiceDonePlaying', () => {
         // voices[id].pop();
@@ -110,7 +109,6 @@ export default {
       if(id in voices && voices[id].length > 0) {
         let voice = voices[id].pop();
         voice.noteOff(whenTime);
-        console.log(`%cOff!%c whenTime: ${whenTime}, currentTime: ${this.audioCtx.currentTime}, id: ${id}`, 'background: red;', null)
       }
     },
     togglePlaying() {
