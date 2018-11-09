@@ -156,7 +156,7 @@ export default {
                 && note.onTriggerCount === this.sequenceCurrentLoop + loopCompensation;
           }),
           off: this.notes.filter(note => {
-            const noteEndOffset = note.x * this.secondsPerSixteenthNote + this.secondsPerSixteenthNote * 2;
+            const noteEndOffset = note.x * this.secondsPerSixteenthNote + this.secondsPerSixteenthNote;
             return noteEndOffset >= startTime
                 && noteEndOffset <= endTime
                 && note.offTriggerCount === this.sequenceCurrentLoop + loopCompensation;
