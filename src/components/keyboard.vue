@@ -3,6 +3,7 @@
         <rect v-for="i in 24" v-if="[1,3,5,7,8,10,12].includes((i-1)%12+1)" :key="'whiteKey'+i"
             :class="['white-key', isKeyDown_[48+(12-i)] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
             x="0" :y="Math.floor((i-1) / 12) * 100 + [0, 0,  0, 12.5, 0, 29.5, 0, 46.57,  58.33, 0, 71, 0, 88][(i-1)%12+1]"
+            width="100"
             :height="[0, 12.5, 0, 17,   0, 17.08,   0, 11.75, 13, 0, 17, 0, 12][(i-1)%12+1]"
             :data-b="i"
             @pointerdown="keyDown(48+(12-i), true, $event)"
@@ -17,6 +18,7 @@
 </template>
 <script>
 import '../key-events.js'
+import '../browser-check.js'
 
 let keysToMidiNote = {
   "KeyZ": 36,
@@ -123,11 +125,15 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+@import '../browser-check.scss';
+
 svg {
   shape-rendering: crispEdges;
+  @include browser(Firefox) {
+    shape-rendering: auto;
+  }
 }
 .white-key {
-  width: 100%;
   fill: white;
   stroke: black;
   stroke-width: 0.5;

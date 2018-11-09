@@ -54,6 +54,8 @@
   </svg>
 </template>
 <script>
+import '../browser-check.js'
+
 const generateNoteId = (() => {
   let id = 0;
   return () => 'sq' + id++
@@ -211,8 +213,13 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+@import '../browser-check.scss';
+
 svg {
   shape-rendering: crispEdges;
+  @include browser(Firefox) {
+    shape-rendering: auto;
+  }
 }
 body {
   height: 100%;
