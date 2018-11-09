@@ -23,10 +23,6 @@
                      :bpm="bpm" />
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
-    <div v-for="i in debugValues" :key="'dbg'+i"
-        :style="{ height: 10 + 'px', background: 'green', width: i * 100 + 'px'}">
-
-    </div>
   </div>
 </template>
 
@@ -60,7 +56,6 @@ export default {
     sliderConfig,
     audioCtx: new AudioContext(),
     bpm: 120,
-    debugValues: [],
   }),
   mounted () {
   },
@@ -105,18 +100,17 @@ export default {
       } else {
         voices[id] = [voice];
       }
-      // console.log(`%cOn!%c whenTime: ${whenTime}, currentTime: ${this.audioCtx.currentTime}, id: ${id}`, 'background: green;', null)
+      console.log(`%cOn!%c whenTime: ${whenTime}, currentTime: ${this.audioCtx.currentTime}, id: ${id}`, 'background: green;', null)
       voice.noteOn(pitch, whenTime);
-      this.debugValues.push(whenTime);
       voice.addEventListener('voiceDonePlaying', () => {
         // voices[id].pop();
       });
     },
     noteOff(id, pitch, whenTime) {
-      if(id in voices) {
+      if(id in voices && voices[id].length > 0) {
         let voice = voices[id].pop();
         voice.noteOff(whenTime);
-        // console.log(`%cOff!%c whenTime: ${whenTime}, currentTime: ${this.audioCtx.currentTime}, id: ${id}`, 'background: red;', null)
+        console.log(`%cOff!%c whenTime: ${whenTime}, currentTime: ${this.audioCtx.currentTime}, id: ${id}`, 'background: red;', null)
       }
     },
     togglePlaying() {

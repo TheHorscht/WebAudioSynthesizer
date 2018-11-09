@@ -102,39 +102,29 @@ export default {
   methods: {
     update_() {
       if(this.playing) {
+        const upcomingEvents = this.getUpcomingEvents(this.sequencePosition, this.lookahead);
+        upcomingEvents.on.forEach(note => {
+          const noteStartOffset = note.x * this.secondsPerSixteenthNote;
+          let noteOnTime = noteStartOffset + this.sequenceLength * note.onTriggerCount;
+          noteOnTime += sequenceStartTime;
+          note.onTriggerCount++;
+          this.$emit('noteOn', { note, whenTime: noteOnTime });
+        });
+        upcomingEvents.off.forEach(note => {
+          const noteEndOffset = note.x * this.secondsPerSixteenthNote + this.secondsPerSixteenthNote;
+          let noteOffTime = noteEndOffset + this.sequenceLength * note.offTriggerCount;
+          noteOffTime += sequenceStartTime;
+          note.offTriggerCount++;
+          this.$emit('noteOff', { note, whenTime: noteOffTime });
+        });
+
         let dt = this.audioContext.currentTime - lastUpdate;
         lastUpdate = this.audioContext.currentTime;
         this.sequencePosition += dt;
         if(this.sequencePosition > this.sequenceLength) {
-          // ??? Wrap around
           this.sequencePosition -= this.sequenceLength;
-          // And we need to check notes I think?
           this.sequenceCurrentLoop++;
-          // sequenceStartTime = this.audioContext.currentTime - this.sequencePosition;
         }
-        this.notes.forEach(note => {
-          // Once we trigger a note it needs to be ignored until the next loop
-
-          const noteStartOffset = note.x * this.secondsPerSixteenthNote;
-          // We need to calculate when the next note should play
-          const startTime = sequenceStartTime + noteStartOffset;
-          const newOnStartTime = sequenceStartTime + noteStartOffset + note.onTriggerCount * this.sequenceLength;
-          if(this.audioContext.currentTime + this.lookahead > newOnStartTime
-             && note.onTriggerCount === this.sequenceCurrentLoop) {
-            note.onTriggerCount++;
-            console.log("Noteon! %o %o", note, newOnStartTime)
-            this.$emit('noteOn', { note, whenTime: newOnStartTime });
-          }
-
-          const noteEndOffset = noteStartOffset + 1 * this.secondsPerSixteenthNote;
-          const endTime = sequenceStartTime + noteEndOffset;
-          const newOffStartTime = sequenceStartTime + noteEndOffset + note.offTriggerCount * this.sequenceLength;
-          if(this.audioContext.currentTime + this.lookahead > newOffStartTime
-             && note.offTriggerCount === this.sequenceCurrentLoop) {
-            note.offTriggerCount++;
-            this.$emit('noteOff', { note, whenTime: newOffStartTime });
-          }
-        });
       }
       window.requestAnimationFrame(this.update_);
     },
@@ -153,33 +143,39 @@ export default {
       const index = this.notes.indexOf(note);
       this.notes.splice(index, 1);
     },
-    getUpcomingNoteOnEvents(playheadPositionPercent, lookahead) {
-      const upcomingEvents = [];
-      // We need to calculate when the next note should play
-      const playheadTime = playheadPositionPercent * this.sequenceLength;
-      // We need to check if the noteOn event is inside an interval of [playhead <-> playhead + lookahead]
-      // if playhead + lookahead is greater than sequenceLength we clamp it to [playhead <-> sequenceLength]
-      // and do ANOTHER check for the remaining duration from [sequenceStart <-> remaining]
-      // where the overshoot is: playhead + lookahead - sequenceLength
-      // e.g.: 1.9 + 2 - 2
-      // If that is positive then we overshot
-      const getNotesInInterval = (startTime, endTime) => {
-        return this.notes.filter(note => {
-          const noteStartOffset = note.x * this.secondsPerSixteenthNote;
-          return noteStartOffset >= startTime && noteStartOffset <= endTime;
-        });
+    getUpcomingEvents(timeInSequence, lookahead) {
+      const upcomingEvents = {
+        on: [], off: []
+      };
+      const getEventsInInterval = (startTime, endTime, loopCompensation = 0) => {
+        return {
+          on: this.notes.filter(note => {
+            const noteStartOffset = note.x * this.secondsPerSixteenthNote;
+            return noteStartOffset >= startTime
+                && noteStartOffset <= endTime
+                && note.onTriggerCount === this.sequenceCurrentLoop + loopCompensation;
+          }),
+          off: this.notes.filter(note => {
+            const noteEndOffset = note.x * this.secondsPerSixteenthNote + this.secondsPerSixteenthNote * 0.5;
+            return noteEndOffset >= startTime
+                && noteEndOffset <= endTime
+                && note.offTriggerCount === this.sequenceCurrentLoop + loopCompensation;
+          }),
+        }
       }
 
-      const overshoot = playheadTime + lookahead - this.sequenceLength;
+      const overshoot = timeInSequence + lookahead - this.sequenceLength;
       if(overshoot > 0) {
-        const notesAtEnd = getNotesInInterval(playheadTime, this.sequenceLength);
-        const notesAtStart = getNotesInInterval(0, overshoot);
-        upcomingEvents.push(...notesAtEnd);
-        upcomingEvents.push(...notesAtStart);
-        console.log(overshoot)
+        const eventsAtEnd = getEventsInInterval(timeInSequence, this.sequenceLength);
+        const eventsAtStart = getEventsInInterval(0, overshoot, 1);
+        upcomingEvents.on.push(...eventsAtEnd.on);
+        upcomingEvents.on.push(...eventsAtStart.on);
+        upcomingEvents.off.push(...eventsAtEnd.off);
+        upcomingEvents.off.push(...eventsAtStart.off);
       } else {
-        const notes = getNotesInInterval(playheadTime, playheadTime + lookahead);
-        upcomingEvents.push(...notes);
+        const events = getEventsInInterval(timeInSequence, timeInSequence + lookahead);
+        upcomingEvents.on.push(...events.on);
+        upcomingEvents.off.push(...events.off);
       }
       return upcomingEvents;
     },
