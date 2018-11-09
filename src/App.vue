@@ -19,7 +19,9 @@
     </div>
     <div class="kb-and-sequencer">
       <vue-keyboard ref="keyboard" @noteOn="onKeyboardNoteOn" @noteOff="onKeyboardNoteOff"/>
-      <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff" :audioContext="audioCtx"
+      <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff"
+                     @stop="onSequencerStop"
+                     :audioContext="audioCtx"
                      :bpm="bpm" />
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
@@ -93,6 +95,20 @@ export default {
 
       this.noteOff(id, pitch, whenTime);
     },
+    onSequencerStop() {
+      this.stopAllNotes();
+    },
+    stopAllNotes() {
+      this.$refs.keyboard.releaseAllKeys();
+      keyboardTimeouts.forEach(timeout => {
+        window.clearTimeout(timeout);
+      })
+      keyboardTimeouts = [];
+      Object.values(voices).forEach(voiceArray => {
+        voiceArray.forEach(voice => voice.noteOff());
+        voiceArray.length = 0;
+      });
+    },
     noteOn(id, pitch, whenTime) {
       const voice = new Voice(this.audioCtx);
       if(id in voices) {
@@ -114,15 +130,6 @@ export default {
     togglePlaying() {
       if(this.$refs.sequencer.playing) {
         this.$refs.sequencer.stop();
-        this.$refs.keyboard.releaseAllKeys();
-        keyboardTimeouts.forEach(timeout => {
-          window.clearTimeout(timeout);
-        })
-        keyboardTimeouts = [];
-        Object.values(voices).forEach(voiceArray => {
-          voiceArray.forEach(voice => voice.noteOff());
-          voiceArray.length = 0;
-        });
       } else {
         this.$refs.sequencer.play();
       } 

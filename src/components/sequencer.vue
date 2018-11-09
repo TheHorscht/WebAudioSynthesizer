@@ -195,6 +195,7 @@ export default {
         note.onTriggerCount = 0;
         note.offTriggerCount = 0;
       });
+      this.$emit('stop');
     },
     resume() {
       this.playing = true;
@@ -202,7 +203,12 @@ export default {
   },
   watch: {
     bpm(newBPM, oldBPM) {
-      console.log(newBPM, oldBPM);
+      if(newBPM > oldBPM) {
+        this.sequencePosition = (oldBPM / newBPM) * this.sequencePosition;
+      } else {
+        this.stop();
+        this.play();
+      }
     }
   },
   computed: {
