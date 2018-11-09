@@ -30,14 +30,13 @@ export default class Voice extends Observable {
     
     this.biquadFilter.type = 'lowpass';
     
-    this.oscillatorNode.connect(this.biquadFilter);
-    this.biquadFilter.connect(this.gainNode);
-    this.gainNode.connect(this.audioCtx.destination);
+    this.oscillatorNode
+    .connect(this.biquadFilter)
+    .connect(this.gainNode)
+    .connect(this.audioCtx.destination);
   }
   noteOn(midiNote, whenTime = this.audioCtx.currentTime) {
-    if(whenTime < this.audioCtx.currentTime) {
-      whenTime = this.audioCtx.currentTime;
-    }
+    whenTime = Math.max(whenTime, this.audioCtx.currentTime);
     this.biquadFilter.frequency.value = 20000;
     this.biquadFilter.frequency.exponentialRampToValueAtTime(1000, whenTime + 0.3);
 
@@ -51,9 +50,7 @@ export default class Voice extends Observable {
     // https://alemangui.github.io/blog//2015/12/26/ramp-to-value.html
     // TODO: Trigger release envelope
     // Important! Setting a scheduled parameter value
-    if(whenTime < this.audioCtx.currentTime) {
-      whenTime = this.audioCtx.currentTime;
-    }
+    whenTime = Math.max(whenTime, this.audioCtx.currentTime);
     this.oscillatorNode.stop(whenTime + 3);
     window.setTimeout(() => {
       this.gainNode.disconnect();
