@@ -32,6 +32,16 @@
 import clamp from 'clamp'
 
 const deg2rad = deg => deg / 360 * Math.PI * 2
+const valueConverters = {
+  linear: {
+    toValue: (p, min, max) => min + (max - min) * p,
+    fromValue: (value, min, max) => (value - min) / (max - min),
+  },
+  log: {
+    toValue: (p, min, max) => Math.pow(max - min, p) + min,
+    fromValue: (value, min, max) => Math.log(value - min + 1) / Math.log(max - min + 1),
+  },
+}
 
 export default {
   name: 'knob',
@@ -52,16 +62,21 @@ export default {
       type: Number,
       default: 0,
     },
+    scale: {
+      type: String,
+      default: 'linear',
+      validator: value => ['linear', 'log'].indexOf(value) !== -1
+    },
     tickCount: {
       type: Number,
       default: 11,
     },
   },
   data: () => ({
-    currentValue: 0,
+    knobPosition: 0,
   }),
   mounted () {
-    this.currentValue = this.value
+    this.knobPosition = valueConverters[this.scale].fromValue(this.value, this.min, this.max)
   },
   methods: {
     pointerDown (e) {
@@ -72,15 +87,14 @@ export default {
     },
     pointerMove (e) {
       if (e.target.hasPointerCapture(e.pointerId)) {
-        const newValue = this.currentValue - e.movementY * 0.5
-        this.currentValue = clamp(newValue, this.min, this.max)
+        const newPosition = this.knobPosition - e.movementY * 0.01
+        this.knobPosition = clamp(newPosition, 0, 1)
       }
     },
   },
   computed: {
-    p: self => self.currentValue / self.max,
     line () {
-      const angle = deg2rad(180 + 45 + (this.p * 270) - 90)
+      const angle = deg2rad(180 + 45 + (this.knobPosition * 270) - 90)
       return {
         x1: 50 + Math.cos(angle) * 30,
         y1: 50 + Math.sin(angle) * 30,
@@ -104,10 +118,13 @@ export default {
     },
   },
   watch: {
-    currentValue (newValue, oldValue) {
-      this.$emit('input', newValue)
+    knobPosition (newValue, oldValue) {
+      this.$emit('input', valueConverters[this.scale].toValue(newValue, this.min, this.max))
+    },
+    value(newValue, oldValue) {
+      this.knobPosition = valueConverters[this.scale].fromValue(newValue, this.min, this.max)
     }
-  }
+  },
 }
 </script>
 <style lang="scss" scoped>

@@ -18,6 +18,7 @@ const SHAPES = {
 }
 
 export default class Voice extends Observable {
+  static filterCutoff = 10000;
   constructor(audioCtx) {
     super();
     this.audioCtx = audioCtx;
@@ -38,7 +39,7 @@ export default class Voice extends Observable {
   noteOn(midiNote, whenTime = this.audioCtx.currentTime) {
     whenTime = Math.max(whenTime, this.audioCtx.currentTime);
     this.biquadFilter.frequency
-    .setValueAtTime(20000, whenTime)
+    .setValueAtTime(this.filterCutoff, whenTime)
     .exponentialRampToValueAtTime(1000, whenTime + 0.3);
 
     this.gainNode.gain

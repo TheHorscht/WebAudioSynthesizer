@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <knob :size="50"/>
-    <knob :size="75"/>
+    <knob :size="75" v-model="filterCutoff" :min="1" :max="22000" scale="log"/>
     <knob :size="100" />
     <div class="ASDR-container">
       <vue-slider v-bind="sliderConfig.verticalASDR" />
@@ -58,6 +58,7 @@ export default {
     sliderConfig,
     audioCtx: new AudioContext(),
     bpm: 120,
+    filterCutoff: 10000,
   }),
   mounted () {
   },
@@ -134,6 +135,11 @@ export default {
         this.$refs.sequencer.play();
       } 
     }
+  },
+  watch: {
+    filterCutoff(newValue, oldValue) {
+      console.log(newValue, oldValue);
+    }
   }
 }
 </script>
@@ -142,13 +148,13 @@ export default {
 @import url('https://fonts.googleapis.com/css?family=Roboto');
 body {
   user-select: none;
+  font-family: 'Roboto', sans-serif;
 }
 .ASDR-container {
   display: inline-grid;
   grid-template-columns: repeat(4, 25px);
   grid-template-rows: auto 20px;
   justify-items: center;
-  font-family: 'Roboto', sans-serif;
 }
 .kb-and-sequencer {
   display: grid;
