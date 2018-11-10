@@ -86,7 +86,7 @@ export default {
     pointerMove (e) {
       if (e.target.hasPointerCapture(e.pointerId)) {
         let newValue = valueConverters[this.scale].toValue(
-          this.knobPosition - e.movementY * 0.01, this.min, this.max)
+          this.knobPosition - e.movementY * 0.005, this.min, this.max)
         newValue = clamp(newValue, this.min, this.max)
         this.$emit('input', newValue)
       }
