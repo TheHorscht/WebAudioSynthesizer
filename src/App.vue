@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <knob :size="50"/>
-    <knob :size="75" v-model="filterCutoff" :min="1" :max="22000" scale="log"/>
+    <knob :size="75" v-model="filterCutoff" :min="1" :max="22000" scale="log" />
     <knob :size="100" />
     <div class="ASDR-container">
       <vue-slider v-bind="sliderConfig.verticalASDR" />
@@ -138,7 +138,7 @@ export default {
   },
   watch: {
     filterCutoff(newValue, oldValue) {
-      console.log(newValue, oldValue);
+      // console.log(newValue, oldValue);
     }
   }
 }

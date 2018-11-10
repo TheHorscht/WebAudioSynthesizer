@@ -38,7 +38,7 @@ const valueConverters = {
     fromValue: (value, min, max) => (value - min) / (max - min),
   },
   log: {
-    toValue: (p, min, max) => Math.pow(max - min, p) + min,
+    toValue: (p, min, max) => Math.pow(max - min - 1, p) + min - 1,
     fromValue: (value, min, max) => Math.log(value - min + 1) / Math.log(max - min + 1),
   },
 }
@@ -73,10 +73,8 @@ export default {
     },
   },
   data: () => ({
-    knobPosition: 0,
   }),
   mounted () {
-    this.knobPosition = valueConverters[this.scale].fromValue(this.value, this.min, this.max)
   },
   methods: {
     pointerDown (e) {
@@ -87,8 +85,10 @@ export default {
     },
     pointerMove (e) {
       if (e.target.hasPointerCapture(e.pointerId)) {
-        const newPosition = this.knobPosition - e.movementY * 0.01
-        this.knobPosition = clamp(newPosition, 0, 1)
+        let newValue = valueConverters[this.scale].toValue(
+          this.knobPosition - e.movementY * 0.01, this.min, this.max)
+        newValue = clamp(newValue, this.min, this.max)
+        this.$emit('input', newValue)
       }
     },
   },
@@ -116,15 +116,8 @@ export default {
       }
       return ticks
     },
-  },
-  watch: {
-    knobPosition (newValue, oldValue) {
-      this.$emit('input', valueConverters[this.scale].toValue(newValue, this.min, this.max))
-    },
-    value(newValue, oldValue) {
-      this.knobPosition = valueConverters[this.scale].fromValue(newValue, this.min, this.max)
-    }
-  },
+    knobPosition: self => valueConverters[self.scale].fromValue(self.value, self.min, self.max)
+  }
 }
 </script>
 <style lang="scss" scoped>
