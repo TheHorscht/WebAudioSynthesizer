@@ -139,6 +139,7 @@ export default {
   watch: {
     filterCutoff(newValue, oldValue) {
       // console.log(newValue, oldValue);
+      Voice.filterCutoff = newValue;
     }
   }
 }
