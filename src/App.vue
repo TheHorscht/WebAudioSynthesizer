@@ -68,6 +68,15 @@ export default {
     filterR: 0,
   }),
   mounted () {
+    const link = (sourceField, cls, destinationField) => {
+      this.$watch(() => this[sourceField], () => cls[destinationField] = this[sourceField], { immediate: true });
+    }
+    link('filterCutoff', Voice, 'filterCutoff');
+    link('filterA', Voice, 'filterAttack');
+    link('filterD', Voice, 'filterDecay');
+    link('filterS', Voice, 'filterSustain');
+    link('filterR', Voice, 'filterRelease');
+    link('volume', Voice, 'volume');
   },
   methods: {
     onKeyboardNoteOn({ pitch, id }) {
@@ -143,28 +152,8 @@ export default {
       } 
     }
   },
-  watch: {
-    filterCutoff(newValue, oldValue) {
-      // console.log(newValue, oldValue);
-      Voice.filterCutoff = newValue;
-    },
-    filterA(newValue, oldValue) {
-      Voice.filterA = newValue;
-    },
-    filterD(newValue, oldValue) {
-      Voice.filterD = newValue;
-    },
-    filterS(newValue, oldValue) {
-      Voice.filterS = newValue;
-    },
-    filterR(newValue, oldValue) {
-      Voice.filterR = newValue;
-    },
-    volume(newValue, oldValue) {
-      Voice.volume = newValue;
-    }
-  }
 }
+window.Voice = Voice
 </script>
 
 <style lang="scss">

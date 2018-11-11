@@ -15,7 +15,7 @@ export default class ADSR {
   noteOn(whenTime) {
     console.log(this.base, this.amplitude)
     this.constantSource.offset.setValueAtTime(this.base, whenTime)
-    this.constantSource.offset.exponentialRampToValueAtTime(this.amplitude, whenTime + this.attack)
+    this.constantSource.offset.exponentialRampToValueAtTime(this.amplitude + 0.00001, whenTime + this.attack)
     this.constantSource.offset.exponentialRampToValueAtTime(this.base + (this.amplitude * this.sustain), whenTime + this.attack + this.decay)
   }
   noteOff(whenTime) {

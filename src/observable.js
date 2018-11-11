@@ -1,4 +1,4 @@
-export default class Observable {
+export class Observable {
   static staticLookup = {};
 
   constructor() {

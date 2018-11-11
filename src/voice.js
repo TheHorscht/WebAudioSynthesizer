@@ -1,4 +1,4 @@
-import Observable from './observable'
+import { Observable } from './observable'
 import ADSR from './adsr'
 
 const midiNoteToFrequency = (function() {
@@ -19,14 +19,6 @@ const SHAPES = {
 }
 
 export default class Voice extends Observable {
-  static filterCutoff = 1;
-  static volume = 0.2;
-  static adsrToFilterAmount = 1;
-  static filterA = 0;
-  static filterD = 0;
-  static filterS = 1;
-  static filterR = 1;
-
   constructor(audioCtx) {
     super();
     this.audioCtx = audioCtx;
@@ -35,10 +27,10 @@ export default class Voice extends Observable {
     this.biquadFilter = audioCtx.createBiquadFilter();
     this.gainNode = audioCtx.createGain();
     this.filterADSR = new ADSR(Voice.filterCutoff, (22000 - Voice.filterCutoff) * Voice.adsrToFilterAmount, audioCtx);
-    this.filterADSR.attack = Voice.filterA;
-    this.filterADSR.decay = Voice.filterD;
-    this.filterADSR.sustain = Voice.filterS;
-    this.filterADSR.release = Voice.filterR;
+    this.filterADSR.attack = Voice.filterAttack;
+    this.filterADSR.decay = Voice.filterDecay;
+    this.filterADSR.sustain = Voice.filterSustain;
+    this.filterADSR.release = Voice.filterRelease;
 
     this.oscillatorNode.type = SHAPES.sawtooth;
     
@@ -77,3 +69,11 @@ export default class Voice extends Observable {
     }, 3000);
   }
 }
+
+Voice.createObservableMember('filterCutoff', 1);
+Voice.createObservableMember('volume', 0.1);
+Voice.createObservableMember('adsrToFilterAmount', 1);
+Voice.createObservableMember('filterAttack', 0);
+Voice.createObservableMember('filterDecay', 0.5);
+Voice.createObservableMember('filterSustain', 0.05);
+Voice.createObservableMember('filterRelease', 0.5);
