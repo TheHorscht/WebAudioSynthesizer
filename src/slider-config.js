@@ -8,7 +8,7 @@ export default {
     width: 200,
     height: 5
   },
-  verticalASDR: {
+  verticalADSR: {
     ...common,
     direction: 'vertical',
     width: 5,

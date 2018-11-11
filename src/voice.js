@@ -1,4 +1,5 @@
 import Observable from './observable'
+import ADSR from './adsr'
 
 const midiNoteToFrequency = (function() {
   var midiNoteFrequencies = [];
@@ -18,7 +19,14 @@ const SHAPES = {
 }
 
 export default class Voice extends Observable {
-  static filterCutoff = 10000;
+  static filterCutoff = 1;
+  static volume = 0.2;
+  static adsrToFilterAmount = 1;
+  static filterA = 0;
+  static filterD = 0;
+  static filterS = 1;
+  static filterR = 1;
+
   constructor(audioCtx) {
     super();
     this.audioCtx = audioCtx;
@@ -26,10 +34,17 @@ export default class Voice extends Observable {
     this.oscillatorNode = audioCtx.createOscillator();
     this.biquadFilter = audioCtx.createBiquadFilter();
     this.gainNode = audioCtx.createGain();
+    this.filterADSR = new ADSR(Voice.filterCutoff, (22000 - Voice.filterCutoff) * Voice.adsrToFilterAmount, audioCtx);
+    this.filterADSR.attack = Voice.filterA;
+    this.filterADSR.decay = Voice.filterD;
+    this.filterADSR.sustain = Voice.filterS;
+    this.filterADSR.release = Voice.filterR;
 
     this.oscillatorNode.type = SHAPES.sawtooth;
     
     this.biquadFilter.type = 'lowpass';
+
+    this.filterADSR.connect(this.biquadFilter.frequency);
     
     this.oscillatorNode
     .connect(this.biquadFilter)
@@ -38,12 +53,10 @@ export default class Voice extends Observable {
   }
   noteOn(midiNote, whenTime = this.audioCtx.currentTime) {
     whenTime = Math.max(whenTime, this.audioCtx.currentTime);
-    this.biquadFilter.frequency
-    .setValueAtTime(Voice.filterCutoff, whenTime)
-    .exponentialRampToValueAtTime(1000, whenTime + 0.3);
+    this.biquadFilter.frequency.setValueAtTime(1, whenTime);
+    this.filterADSR.noteOn(whenTime);
 
-    this.gainNode.gain
-    .setValueAtTime(0.02, whenTime);
+    this.gainNode.gain.setValueAtTime(Voice.volume, whenTime);
     this.oscillatorNode.frequency.setValueAtTime(midiNoteToFrequency(midiNote), whenTime);
     this.oscillatorNode.start(whenTime);
   }
@@ -53,7 +66,8 @@ export default class Voice extends Observable {
     // TODO: Trigger release envelope
     // Important! Setting a scheduled parameter value
     // this.gainNode.gain.cancelScheduledValues(whenTime);
-    this.gainNode.gain.setValueAtTime(0.02, whenTime);
+    this.filterADSR.noteOff(whenTime);
+    this.gainNode.gain.setValueAtTime(Voice.volume, whenTime);
     this.gainNode.gain.exponentialRampToValueAtTime(0.00001, whenTime + 3);
     this.oscillatorNode.stop(whenTime + 3);
     window.setTimeout(() => {

@@ -4,16 +4,18 @@
     <knob :size="75" v-model="filterCutoff" :min="1" :max="22000" scale="log" />
     <knob :size="100" />
     <div class="ASDR-container">
-      <vue-slider v-bind="sliderConfig.verticalASDR" />
-      <vue-slider v-bind="sliderConfig.verticalASDR" />
-      <vue-slider v-bind="sliderConfig.verticalASDR" />
-      <vue-slider v-bind="sliderConfig.verticalASDR" />
+      <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterA" :min="0" :max="1" :interval="0.01" />
+      <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterD" :min="0" :max="1" :interval="0.01" />
+      <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterS" :min="0" :max="1" :interval="0.01" />
+      <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterR" :min="0" :max="1" :interval="0.01" />
       <span>A</span>
-      <span>S</span>
       <span>D</span>
+      <span>S</span>
       <span>R</span>
     </div>
     <div>
+      <vue-slider v-bind="sliderConfig.horizontal" :min="0" :max="0.5" :interval="0.01" v-model="volume"/>
+      Volume: {{ volume }}
       <vue-slider v-bind="sliderConfig.horizontal" :min="80" :max="200" v-model="bpm"/>
       BPM: {{ bpm }}
     </div>
@@ -58,7 +60,12 @@ export default {
     sliderConfig,
     audioCtx: new AudioContext(),
     bpm: 120,
+    volume: 0.02,
     filterCutoff: 10000,
+    filterA: 0,
+    filterD: 0,
+    filterS: 1,
+    filterR: 0,
   }),
   mounted () {
   },
@@ -140,6 +147,21 @@ export default {
     filterCutoff(newValue, oldValue) {
       // console.log(newValue, oldValue);
       Voice.filterCutoff = newValue;
+    },
+    filterA(newValue, oldValue) {
+      Voice.filterA = newValue;
+    },
+    filterD(newValue, oldValue) {
+      Voice.filterD = newValue;
+    },
+    filterS(newValue, oldValue) {
+      Voice.filterS = newValue;
+    },
+    filterR(newValue, oldValue) {
+      Voice.filterR = newValue;
+    },
+    volume(newValue, oldValue) {
+      Voice.volume = newValue;
     }
   }
 }
