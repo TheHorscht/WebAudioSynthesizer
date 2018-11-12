@@ -199,6 +199,7 @@ body {
 }
 fieldset {
   display: inline-block;
+  vertical-align: middle; // Why is this necessary?
 }
 .ASDR-container {
   display: inline-grid;
