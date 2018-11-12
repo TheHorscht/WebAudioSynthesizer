@@ -34,7 +34,7 @@ export default class Voice extends Observable {
 
     this.oscillatorNode.type = SHAPES.sawtooth;
 
-    this.filterADSR = new ADSR((22000 - Voice.filterCutoff) * Voice.adsrToFilterAmount, audioCtx);
+    this.filterADSR = new ADSR((22000 - Voice.filterCutoff) * Voice.filterEnvelopeAmount, audioCtx);
     this.filterADSR.attack = Voice.filterAttack;
     this.filterADSR.decay = Voice.filterDecay;
     this.filterADSR.sustain = Voice.filterSustain;
@@ -46,6 +46,7 @@ export default class Voice extends Observable {
 
     this.volumeADSR.connect(this.gainNode.gain);
     this.filterADSR.connect(this.biquadFilter.frequency);
+    this.filterADSR.tension = 0.5
     
     this.oscillatorNode
     .connect(this.biquadFilter)
@@ -87,7 +88,7 @@ Voice.createObservableMember('volumeAttack', 0);
 Voice.createObservableMember('volumeDecay', 0.5);
 Voice.createObservableMember('volumeSustain', 0.05);
 Voice.createObservableMember('volumeRelease', 0.5);
-Voice.createObservableMember('adsrToFilterAmount', 1);
+Voice.createObservableMember('filterEnvelopeAmount', 1);
 Voice.createObservableMember('filterAttack', 0);
 Voice.createObservableMember('filterDecay', 0.5);
 Voice.createObservableMember('filterSustain', 0.05);

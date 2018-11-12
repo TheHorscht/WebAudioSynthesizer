@@ -26,6 +26,7 @@
                         gradientTransform="rotate(180, 0.5, 0.5)"/>
       </defs>
     </svg>
+    <label>{{ label }}</label>
   </div>
 </template>
 <script>
@@ -61,6 +62,10 @@ export default {
     value: {
       type: Number,
       default: 0,
+    },
+    label: {
+      type: String,
+      default: '',
     },
     scale: {
       type: String,
@@ -138,5 +143,12 @@ svg {
     stroke:black;
     stroke-width: 3;
   }
+}
+label {
+  display: block;
+  margin: auto;
+  text-align: center;
+  position: relative;
+  top: -5px;
 }
 </style>

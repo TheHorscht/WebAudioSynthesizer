@@ -1,15 +1,12 @@
 <template>
   <div id="app">
-    <knob :size="50"/>
-    <knob :size="75" v-model="filterCutoff" :min="1" :max="22000" scale="log" />
-    <knob :size="100" />
     <fieldset>
       <legend>Amplitude</legend>
       <div class="ASDR-container">
         <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeA" :min="0" :max="1" :interval="0.01" />
         <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeD" :min="0" :max="1" :interval="0.01" />
         <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeS" :min="0" :max="1" :interval="0.01" />
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeR" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeR" :min="0.01" :max="1" :interval="0.01" />
         <span>A</span>
         <span>D</span>
         <span>S</span>
@@ -17,12 +14,16 @@
       </div>
     </fieldset>
     <fieldset>
-      <legend>Filter Cutoff</legend>
-      <div class="ASDR-container">
+      <legend>Filter</legend>
+      <div class="filter-envelope-container">
+        <knob :size="75" label="Cutoff" v-model="filterCutoff" :min="5" :max="22000" scale="log" />
+        <knob :size="75" label="Resonance" v-model="filterResonance" :min="0" :max="1" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterEnvelopeAmount" :min="0" :max="1" :interval="0.01" />
         <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterA" :min="0" :max="1" :interval="0.01" />
         <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterD" :min="0" :max="1" :interval="0.01" />
         <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterS" :min="0" :max="1" :interval="0.01" />
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterR" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterR" :min="0.01" :max="1" :interval="0.01" />
+        <span>Env</span>
         <span>A</span>
         <span>D</span>
         <span>S</span>
@@ -77,29 +78,40 @@ export default {
     audioCtx: new AudioContext(),
     bpm: 120,
     volume: 0.02,
-    filterCutoff: 10000,
+    filterCutoff: 220,
+    filterResonance: 0,
     volumeA: 0,
     volumeD: 0,
     volumeS: 1,
-    volumeR: 0,
+    volumeR: 0.01,
+    filterEnvelopeAmount: 1,
     filterA: 0,
     filterD: 0,
     filterS: 1,
-    filterR: 0,
+    filterR: 0.01,
   }),
   mounted () {
-    const link = (sourceField, cls, destinationField) => {
-      this.$watch(() => this[sourceField], () => cls[destinationField] = this[sourceField], { immediate: true });
+    const link = (sourceField, cls, destinationField, transformFunction) => {
+      this.$watch(() => this[sourceField], () => {
+        if(transformFunction) {
+          cls[destinationField] = transformFunction(this[sourceField]);
+          console.log(`Setting destinationField: ${destinationField} to ${transformFunction(this[sourceField])}`);
+          
+        } else {
+          cls[destinationField] = this[sourceField];
+        }
+      }, { immediate: true });
     }
     link('volumeA', Voice, 'volumeAttack');
     link('volumeD', Voice, 'volumeDecay');
     link('volumeS', Voice, 'volumeSustain');
     link('volumeR', Voice, 'volumeRelease');
     link('filterCutoff', Voice, 'filterCutoff');
-    link('filterA', Voice, 'filterAttack');
-    link('filterD', Voice, 'filterDecay');
-    link('filterS', Voice, 'filterSustain');
-    link('filterR', Voice, 'filterRelease');
+    link('filterEnvelopeAmount', Voice, 'filterEnvelopeAmount');
+    link('filterA', Voice, 'filterAttack', val => Math.pow(val, 2));
+    link('filterD', Voice, 'filterDecay', val => Math.pow(val, 2));
+    link('filterS', Voice, 'filterSustain', val => Math.pow(val, 2));
+    link('filterR', Voice, 'filterRelease', val => Math.pow(val, 2));
     link('volume', Voice, 'volume');
   },
   methods: {
@@ -193,6 +205,15 @@ fieldset {
   grid-template-columns: repeat(4, 25px);
   grid-template-rows: auto 20px;
   justify-items: center;
+}
+.filter-envelope-container {
+  display: inline-grid;
+  grid-template-columns: 90px 90px 60px repeat(4, 25px);
+  grid-template-rows: auto 20px;
+  justify-items: center;
+  :nth-child(1), :nth-child(2) {
+    grid-row: 1/3;
+  }
 }
 .kb-and-sequencer {
   display: grid;
