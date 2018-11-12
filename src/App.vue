@@ -3,16 +3,32 @@
     <knob :size="50"/>
     <knob :size="75" v-model="filterCutoff" :min="1" :max="22000" scale="log" />
     <knob :size="100" />
-    <div class="ASDR-container">
-      <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterA" :min="0" :max="1" :interval="0.01" />
-      <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterD" :min="0" :max="1" :interval="0.01" />
-      <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterS" :min="0" :max="1" :interval="0.01" />
-      <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterR" :min="0" :max="1" :interval="0.01" />
-      <span>A</span>
-      <span>D</span>
-      <span>S</span>
-      <span>R</span>
-    </div>
+    <fieldset>
+      <legend>Amplitude</legend>
+      <div class="ASDR-container">
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeA" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeD" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeS" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeR" :min="0" :max="1" :interval="0.01" />
+        <span>A</span>
+        <span>D</span>
+        <span>S</span>
+        <span>R</span>
+      </div>
+    </fieldset>
+    <fieldset>
+      <legend>Filter Cutoff</legend>
+      <div class="ASDR-container">
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterA" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterD" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterS" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterR" :min="0" :max="1" :interval="0.01" />
+        <span>A</span>
+        <span>D</span>
+        <span>S</span>
+        <span>R</span>
+      </div>
+    </fieldset>
     <div>
       <vue-slider v-bind="sliderConfig.horizontal" :min="0" :max="0.5" :interval="0.01" v-model="volume"/>
       Volume: {{ volume }}
@@ -62,6 +78,10 @@ export default {
     bpm: 120,
     volume: 0.02,
     filterCutoff: 10000,
+    volumeA: 0,
+    volumeD: 0,
+    volumeS: 1,
+    volumeR: 0,
     filterA: 0,
     filterD: 0,
     filterS: 1,
@@ -71,6 +91,10 @@ export default {
     const link = (sourceField, cls, destinationField) => {
       this.$watch(() => this[sourceField], () => cls[destinationField] = this[sourceField], { immediate: true });
     }
+    link('volumeA', Voice, 'volumeAttack');
+    link('volumeD', Voice, 'volumeDecay');
+    link('volumeS', Voice, 'volumeSustain');
+    link('volumeR', Voice, 'volumeRelease');
     link('filterCutoff', Voice, 'filterCutoff');
     link('filterA', Voice, 'filterAttack');
     link('filterD', Voice, 'filterDecay');
@@ -96,7 +120,6 @@ export default {
       }, delay * 1000);
       keyboardTimeouts.push(timeout);
 
-      // this.noteOn(id, pitch, whenTime);
       this.noteOn(id, pitch, whenTime);
     },
     onSequencerNoteOff({ note, whenTime }) {
@@ -161,6 +184,9 @@ window.Voice = Voice
 body {
   user-select: none;
   font-family: 'Roboto', sans-serif;
+}
+fieldset {
+  display: inline-block;
 }
 .ASDR-container {
   display: inline-grid;

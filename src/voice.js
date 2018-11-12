@@ -26,16 +26,25 @@ export default class Voice extends Observable {
     this.oscillatorNode = audioCtx.createOscillator();
     this.biquadFilter = audioCtx.createBiquadFilter();
     this.gainNode = audioCtx.createGain();
-    this.filterADSR = new ADSR(Voice.filterCutoff, (22000 - Voice.filterCutoff) * Voice.adsrToFilterAmount, audioCtx);
+    this.volumeADSR = new ADSR(0.2, audioCtx);
+    this.volumeADSR.attack = Voice.volumeAttack;
+    this.volumeADSR.decay = Voice.volumeDecay;
+    this.volumeADSR.sustain = Voice.volumeSustain;
+    this.volumeADSR.release = Voice.volumeRelease;
+
+    this.oscillatorNode.type = SHAPES.sawtooth;
+
+    this.filterADSR = new ADSR((22000 - Voice.filterCutoff) * Voice.adsrToFilterAmount, audioCtx);
     this.filterADSR.attack = Voice.filterAttack;
     this.filterADSR.decay = Voice.filterDecay;
     this.filterADSR.sustain = Voice.filterSustain;
     this.filterADSR.release = Voice.filterRelease;
 
-    this.oscillatorNode.type = SHAPES.sawtooth;
-    
     this.biquadFilter.type = 'lowpass';
+    
+    this.gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
 
+    this.volumeADSR.connect(this.gainNode.gain);
     this.filterADSR.connect(this.biquadFilter.frequency);
     
     this.oscillatorNode
@@ -45,12 +54,13 @@ export default class Voice extends Observable {
   }
   noteOn(midiNote, whenTime = this.audioCtx.currentTime) {
     whenTime = Math.max(whenTime, this.audioCtx.currentTime);
-    this.biquadFilter.frequency.setValueAtTime(1, whenTime);
-    this.filterADSR.noteOn(whenTime);
+    this.biquadFilter.frequency.setValueAtTime(Voice.filterCutoff, whenTime);
 
-    this.gainNode.gain.setValueAtTime(Voice.volume, whenTime);
     this.oscillatorNode.frequency.setValueAtTime(midiNoteToFrequency(midiNote), whenTime);
     this.oscillatorNode.start(whenTime);
+      
+    this.volumeADSR.noteOn(whenTime);
+    this.filterADSR.noteOn(whenTime);
   }
   noteOff(whenTime = this.audioCtx.currentTime) {
     whenTime = Math.max(whenTime, this.audioCtx.currentTime);
@@ -58,9 +68,10 @@ export default class Voice extends Observable {
     // TODO: Trigger release envelope
     // Important! Setting a scheduled parameter value
     // this.gainNode.gain.cancelScheduledValues(whenTime);
+    this.volumeADSR.noteOff(whenTime);
     this.filterADSR.noteOff(whenTime);
-    this.gainNode.gain.setValueAtTime(Voice.volume, whenTime);
-    this.gainNode.gain.exponentialRampToValueAtTime(0.00001, whenTime + 3);
+    /* this.gainNode.gain.setValueAtTime(Voice.volume, whenTime);
+    this.gainNode.gain.exponentialRampToValueAtTime(0.00001, whenTime + 3); */
     this.oscillatorNode.stop(whenTime + 3);
     window.setTimeout(() => {
       this.gainNode.disconnect();
@@ -72,6 +83,10 @@ export default class Voice extends Observable {
 
 Voice.createObservableMember('filterCutoff', 1);
 Voice.createObservableMember('volume', 0.1);
+Voice.createObservableMember('volumeAttack', 0);
+Voice.createObservableMember('volumeDecay', 0.5);
+Voice.createObservableMember('volumeSustain', 0.05);
+Voice.createObservableMember('volumeRelease', 0.5);
 Voice.createObservableMember('adsrToFilterAmount', 1);
 Voice.createObservableMember('filterAttack', 0);
 Voice.createObservableMember('filterDecay', 0.5);

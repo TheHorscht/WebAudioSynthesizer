@@ -1,25 +1,24 @@
-// https://codepen.io/thehorscht/pen/gQwPXZ?editors=1010
 export default class ADSR {
-  constructor(base, amplitude, audioCtx) {
+  constructor(amplitude, audioCtx) {
     this.ctx = audioCtx
     this.constantSource = audioCtx.createConstantSource()
     this.attack = 0
     this.decay = 0
     this.sustain = 1
     this.release = 0.5
-    this.base = base
+    this.tension = 0.2
     this.amplitude = amplitude
     this.connect = this.constantSource.connect.bind(this.constantSource)
-    this.constantSource.start()
   }
   noteOn(whenTime) {
-    console.log(this.base, this.amplitude)
-    this.constantSource.offset.setValueAtTime(this.base, whenTime)
-    this.constantSource.offset.exponentialRampToValueAtTime(this.amplitude + 0.00001, whenTime + this.attack)
-    this.constantSource.offset.exponentialRampToValueAtTime(this.base + (this.amplitude * this.sustain), whenTime + this.attack + this.decay)
+    this.constantSource.offset.cancelScheduledValues(whenTime)
+    this.constantSource.offset.setValueAtTime(0, whenTime)
+    this.constantSource.offset.setTargetAtTime(this.amplitude, whenTime, this.tension * this.attack);
+    this.constantSource.offset.setTargetAtTime(this.amplitude * this.sustain, whenTime + this.attack, this.tension * this.decay);
+    this.constantSource.start(whenTime)
   }
   noteOff(whenTime) {
     this.constantSource.offset.cancelAndHoldAtTime(whenTime);
-    this.constantSource.offset.exponentialRampToValueAtTime(this.base, whenTime + this.release);
+    this.constantSource.offset.setTargetAtTime(0, whenTime, this.tension * this.release);
   }
 }
