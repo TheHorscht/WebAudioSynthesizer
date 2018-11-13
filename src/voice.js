@@ -11,7 +11,7 @@ const midiNoteToFrequency = (function() {
   }
 })();
 
-const SHAPES = {
+export const SHAPES = {
   sine: 'sine',
   square: 'square',
   sawtooth: 'sawtooth',

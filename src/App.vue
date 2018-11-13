@@ -1,5 +1,60 @@
 <template>
   <div id="app">
+    <fieldset class="oscillator-container" v-for="(osc, i) in oscillators" :key="'oscillator'+i">
+      <legend>OSC {{ i + 1 }}</legend>
+      <label>
+        Active
+        <input type="checkbox" :checked="osc.active">
+      </label>
+      <label>
+        Shape
+        <select v-model="osc.shape">
+          <option v-for="shape in SHAPES"
+                  :key="shape"
+                  :value="shape">
+            {{ shape }}
+          </option>
+        </select>
+      </label>
+      <label>
+        Voices
+        <select v-model="osc.voices">
+          <option v-for="voiceCount in 8"
+                  :key="'voiceSelect'+voiceCount"
+                  :value="voiceCount">
+            {{ voiceCount }}
+          </option>
+        </select>
+      </label>
+      <label>
+        Detune
+        <vue-slider v-bind="sliderConfig.horizontal"
+                    v-model="osc.detune"
+                    :min="0" :max="1200" />
+      </label>
+      <label>
+        Octave
+        <select v-model="osc.octave">
+          <option v-for="octave in 5"
+                  :key="'octaveSelect'+octave"
+                  :value="octave - 3">
+            <template v-if="octave - 3 > 0">+</template>
+            {{ octave - 3 }}
+          </option>
+        </select>
+      </label>
+      <label>
+        Pitch
+        <select v-model="osc.pitch">
+          <option v-for="pitch in 25"
+                  :key="'pitchSelect'+pitch"
+                  :value="pitch - 13">
+            <template v-if="pitch - 13 > 0">+</template>
+            {{ pitch - 13 }}
+          </option>
+        </select>
+      </label>
+    </fieldset>
     <fieldset>
       <legend>Filter</legend>
       <div class="filter-envelope-container">
@@ -53,7 +108,7 @@ import vueSlider from 'vue-slider-component'
 import vueKeyboard from './components/keyboard'
 import vueSequencer from './components/sequencer'
 import sliderConfig from './slider-config'
-import Voice from './voice'
+import Voice, { SHAPES } from './voice'
 
 const voices = {};
 const generateNewId = (() => {
@@ -75,9 +130,28 @@ export default {
   },
   data: () => ({
     sliderConfig,
+    SHAPES,
     audioCtx: new AudioContext(),
     bpm: 120,
     volume: 0.02,
+    oscillators: [
+      {
+        shape: SHAPES.sawtooth,
+        active: true,
+        voices: 1,
+        detune: 0,
+        octave: 0,
+        pitch: 0,
+      },
+      {
+        shape: SHAPES.square,
+        active: false,
+        voices: 1,
+        detune: 0,
+        octave: 0,
+        pitch: 0,
+      },
+    ],
     filterCutoff: 220,
     filterResonance: 0,
     volumeA: 0,
@@ -195,6 +269,11 @@ window.Voice = Voice
 body {
   user-select: none;
   font-family: 'Roboto', sans-serif;
+}
+.oscillator-container {
+  label {
+    display: block;
+  }
 }
 fieldset {
   display: inline-block;
