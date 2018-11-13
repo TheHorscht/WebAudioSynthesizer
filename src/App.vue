@@ -1,12 +1,16 @@
 <template>
   <div id="app">
     <fieldset>
-      <legend>Amplitude</legend>
-      <div class="ASDR-container">
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeA" :min="0" :max="1" :interval="0.01" />
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeD" :min="0" :max="1" :interval="0.01" />
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeS" :min="0" :max="1" :interval="0.01" />
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeR" :min="0.01" :max="1" :interval="0.01" />
+      <legend>Filter</legend>
+      <div class="filter-envelope-container">
+        <knob :size="75" label="Cutoff" v-model="filterCutoff" :min="5" :max="22000" scale="log" />
+        <knob :size="75" label="Resonance" v-model="filterResonance" :min="0" :max="10" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterEnvelopeAmount" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterA" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterD" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterS" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterR" :min="0.01" :max="1" :interval="0.01" />
+        <span>Env</span>
         <span>A</span>
         <span>D</span>
         <span>S</span>
@@ -14,16 +18,12 @@
       </div>
     </fieldset>
     <fieldset>
-      <legend>Filter</legend>
-      <div class="filter-envelope-container">
-        <knob :size="75" label="Cutoff" v-model="filterCutoff" :min="5" :max="22000" scale="log" />
-        <knob :size="75" label="Resonance" v-model="filterResonance" :min="0" :max="1" />
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterEnvelopeAmount" :min="0" :max="1" :interval="0.01" />
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterA" :min="0" :max="1" :interval="0.01" />
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterD" :min="0" :max="1" :interval="0.01" />
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterS" :min="0" :max="1" :interval="0.01" />
-        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="filterR" :min="0.01" :max="1" :interval="0.01" />
-        <span>Env</span>
+      <legend>Amplitude</legend>
+      <div class="ASDR-container">
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeA" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeD" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeS" :min="0" :max="1" :interval="0.01" />
+        <vue-slider v-bind="sliderConfig.verticalADSR" v-model="volumeR" :min="0.01" :max="1" :interval="0.01" />
         <span>A</span>
         <span>D</span>
         <span>S</span>
@@ -84,10 +84,10 @@ export default {
     volumeD: 0,
     volumeS: 1,
     volumeR: 0.01,
-    filterEnvelopeAmount: 1,
+    filterEnvelopeAmount: 0,
     filterA: 0,
-    filterD: 0,
-    filterS: 1,
+    filterD: 0.5,
+    filterS: 0,
     filterR: 0.01,
   }),
   mounted () {
@@ -95,8 +95,6 @@ export default {
       this.$watch(() => this[sourceField], () => {
         if(transformFunction) {
           cls[destinationField] = transformFunction(this[sourceField]);
-          console.log(`Setting destinationField: ${destinationField} to ${transformFunction(this[sourceField])}`);
-          
         } else {
           cls[destinationField] = this[sourceField];
         }
@@ -107,6 +105,7 @@ export default {
     link('volumeS', Voice, 'volumeSustain');
     link('volumeR', Voice, 'volumeRelease');
     link('filterCutoff', Voice, 'filterCutoff');
+    link('filterResonance', Voice, 'filterResonance');
     link('filterEnvelopeAmount', Voice, 'filterEnvelopeAmount');
     link('filterA', Voice, 'filterAttack', val => Math.pow(val, 2));
     link('filterD', Voice, 'filterDecay', val => Math.pow(val, 2));
@@ -213,7 +212,8 @@ fieldset {
   grid-template-rows: auto 20px;
   justify-items: center;
   :nth-child(1), :nth-child(2) {
-    grid-row: 1/3;
+    grid-row: 1 / 3;
+    align-self: center;
   }
 }
 .kb-and-sequencer {

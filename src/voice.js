@@ -19,6 +19,9 @@ const SHAPES = {
 }
 
 export default class Voice extends Observable {
+  /**
+   * @param {AudioContext} audioCtx
+   */
   constructor(audioCtx) {
     super();
     this.audioCtx = audioCtx;
@@ -26,7 +29,7 @@ export default class Voice extends Observable {
     this.oscillatorNode = audioCtx.createOscillator();
     this.biquadFilter = audioCtx.createBiquadFilter();
     this.gainNode = audioCtx.createGain();
-    this.volumeADSR = new ADSR(0.2, audioCtx);
+    this.volumeADSR = new ADSR(Voice.volume, audioCtx);
     this.volumeADSR.attack = Voice.volumeAttack;
     this.volumeADSR.decay = Voice.volumeDecay;
     this.volumeADSR.sustain = Voice.volumeSustain;
@@ -41,6 +44,7 @@ export default class Voice extends Observable {
     this.filterADSR.release = Voice.filterRelease;
 
     this.biquadFilter.type = 'lowpass';
+    this.biquadFilter.Q.setValueAtTime(Voice.filterResonance, audioCtx.currentTime);
     
     this.gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
 
@@ -83,6 +87,7 @@ export default class Voice extends Observable {
 }
 
 Voice.createObservableMember('filterCutoff', 1);
+Voice.createObservableMember('filterResonance', 0);
 Voice.createObservableMember('volume', 0.1);
 Voice.createObservableMember('volumeAttack', 0);
 Voice.createObservableMember('volumeDecay', 0.5);
