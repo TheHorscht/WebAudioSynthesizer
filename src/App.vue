@@ -99,6 +99,7 @@
                      :bpm="bpm" />
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
+    <zoom-scrollbar orientation="vertical" />
   </div>
 </template>
 
@@ -107,6 +108,7 @@ import knob from './components/knob'
 import vueSlider from 'vue-slider-component'
 import vueKeyboard from './components/keyboard'
 import vueSequencer from './components/sequencer'
+import zoomScrollbar from './components/zoom-scrollbar'
 import sliderConfig from './slider-config'
 import Voice, { SHAPES } from './voice'
 
@@ -127,6 +129,7 @@ export default {
     vueSlider,
     vueKeyboard,
     vueSequencer,
+    zoomScrollbar,
   },
   data: () => ({
     sliderConfig,
@@ -169,7 +172,6 @@ export default {
         } else {
           cls[destinationField] = this[sourceField];
         }
-        console.log("change", sourceField, destinationField)
       }, { immediate: true });
     }
     link('volumeA', Voice, 'volumeAttack');
