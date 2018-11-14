@@ -113,7 +113,7 @@ export default {
   }
   &-vertical {
     width: 20px;
-    height: 200px;
+    height: 100%;
   }
 }
 .handle {

@@ -93,13 +93,16 @@
     </div>
     <div class="kb-and-sequencer">
       <vue-keyboard ref="keyboard" @noteOn="onKeyboardNoteOn" @noteOff="onKeyboardNoteOff"/>
-      <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff"
-                     @stop="onSequencerStop"
-                     :audioContext="audioCtx"
-                     :bpm="bpm" />
+      <div class="sequencer-and-scrollbars">
+        <zoom-scrollbar orientation="horizontal" />
+        <zoom-scrollbar orientation="vertical" />
+        <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff"
+                      @stop="onSequencerStop"
+                      :audioContext="audioCtx"
+                      :bpm="bpm" />
+      </div>
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
-    <zoom-scrollbar orientation="vertical" />
   </div>
 </template>
 
@@ -328,12 +331,24 @@ fieldset {
 .kb-and-sequencer {
   display: grid;
   grid-template-columns: 100px auto;
-  resize: both;
-  overflow: scroll;
-  
-  min-width: 400px;
-  min-height: 400px;
-  max-width: 800px;
-  max-height: 800px;
+  height: 500px;
+  width: 800px;
+}
+.sequencer-and-scrollbars {
+  display: grid;
+  grid-template-columns: 1fr 20px;
+  grid-template-rows: 20px 1fr;
+  > :nth-child(1) {
+    grid-row: 1;
+    grid-column: 1;
+  }
+  > :nth-child(2) {
+    grid-row: 2;
+    grid-column: 2;
+  }
+  > :nth-child(3) {
+    grid-row: 2;
+    grid-column: 1;
+  }
 }
 </style>
