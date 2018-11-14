@@ -4,7 +4,7 @@
       <legend>OSC {{ i + 1 }}</legend>
       <label>
         Active
-        <input type="checkbox" :checked="osc.active">
+        <input type="checkbox" v-model="osc.active">
       </label>
       <label>
         Shape
@@ -19,7 +19,7 @@
       <label>
         Voices
         <select v-model="osc.voices">
-          <option v-for="voiceCount in 8"
+          <option v-for="voiceCount in 4"
                   :key="'voiceSelect'+voiceCount"
                   :value="voiceCount">
             {{ voiceCount }}
@@ -133,26 +133,23 @@ export default {
     SHAPES,
     audioCtx: new AudioContext(),
     bpm: 120,
-    volume: 0.02,
-    oscillators: [
-      {
-        shape: SHAPES.sawtooth,
-        active: true,
-        voices: 1,
-        detune: 0,
-        octave: 0,
-        pitch: 0,
-      },
-      {
-        shape: SHAPES.square,
-        active: false,
-        voices: 1,
-        detune: 0,
-        octave: 0,
-        pitch: 0,
-      },
-    ],
-    filterCutoff: 220,
+    volume: 0.25,
+    oscillators: [{
+      shape: SHAPES.sawtooth,
+      active: true,
+      voices: 1,
+      detune: 0,
+      octave: 0,
+      pitch: 0,
+    }, {
+      shape: SHAPES.square,
+      active: false,
+      voices: 1,
+      detune: 0,
+      octave: 0,
+      pitch: 0,
+    }],
+    filterCutoff: 22000,
     filterResonance: 0,
     volumeA: 0,
     volumeD: 0,
@@ -172,12 +169,28 @@ export default {
         } else {
           cls[destinationField] = this[sourceField];
         }
+        console.log("change", sourceField, destinationField)
       }, { immediate: true });
     }
     link('volumeA', Voice, 'volumeAttack');
     link('volumeD', Voice, 'volumeDecay');
     link('volumeS', Voice, 'volumeSustain');
     link('volumeR', Voice, 'volumeRelease');
+
+    link('osc1active', Voice, 'osc1active');
+    link('osc1shape', Voice, 'osc1shape');
+    link('osc1voices', Voice, 'osc1voices');
+    link('osc1detune', Voice, 'osc1detune');
+    link('osc1octave', Voice, 'osc1octave');
+    link('osc1pitch', Voice, 'osc1pitch');
+
+    link('osc2active', Voice, 'osc2active');
+    link('osc2shape', Voice, 'osc2shape');
+    link('osc2voices', Voice, 'osc2voices');
+    link('osc2detune', Voice, 'osc2detune');
+    link('osc2octave', Voice, 'osc2octave');
+    link('osc2pitch', Voice, 'osc2pitch');
+
     link('filterCutoff', Voice, 'filterCutoff');
     link('filterResonance', Voice, 'filterResonance');
     link('filterEnvelopeAmount', Voice, 'filterEnvelopeAmount');
@@ -260,6 +273,21 @@ export default {
       } 
     }
   },
+  computed: {
+    osc1active: self => self.oscillators[0].active,
+    osc1shape: self => self.oscillators[0].shape,
+    osc1voices: self => self.oscillators[0].voices,
+    osc1detune: self => self.oscillators[0].detune,
+    osc1octave: self => self.oscillators[0].octave,
+    osc1pitch: self => self.oscillators[0].pitch,
+
+    osc2active: self => self.oscillators[1].active,
+    osc2shape: self => self.oscillators[1].shape,
+    osc2voices: self => self.oscillators[1].voices,
+    osc2detune: self => self.oscillators[1].detune,
+    osc2octave: self => self.oscillators[1].octave,
+    osc2pitch: self => self.oscillators[1].pitch,
+  }
 }
 window.Voice = Voice
 </script>
