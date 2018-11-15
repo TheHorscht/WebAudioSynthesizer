@@ -1,6 +1,6 @@
 <template>
   <div :class="['scrollbar-container', `scrollbar-container-${orientation}`]" ref="scrollbarContainer">
-    <div :class="['handle', `handle-${orientation}`]" ref="handle"
+    <div :class="['handle', `handle-${orientation}`, mode === MODES.move ? 'handle-active' : '']" ref="handle"
          @pointerdown="onPointerDown"
          @pointerup="onPointerUp"
          @pointermove="onPointerMove"
@@ -18,7 +18,8 @@ const MODES = {
   move: 1,
   resizeStart: 2,
   resizeEnd: 3,
-};
+}
+
 export default {
   name: 'ZoomScrollbar',
   props: {
@@ -32,7 +33,8 @@ export default {
     start: 0,
     end: 0.5,
     minDistance: 0.1,
-    mode: MODES.none
+    MODES,
+    mode: MODES.none,
   }),
   methods: {
     onPointerDown (e) {
@@ -47,6 +49,7 @@ export default {
     },
     onPointerUp (e) {
       e.target.releasePointerCapture(e.pointerId)
+      this.mode = MODES.none;
     },
     onPointerMove (e) {
       if (e.target.hasPointerCapture(e.pointerId)) {
@@ -98,7 +101,7 @@ export default {
       },
       vertical: {
         top: `calc(${self.start * 100}% - 1px)`,
-        height: `calc(${(self.end - self.start) * 100}% + 2px)`,
+        height: `calc(${(self.end - self.start) * 100}% + 1px)`,
       },
     }[self.orientation]),
   }
@@ -119,6 +122,10 @@ export default {
   position: relative;
   background: #a0a0a0;
   box-sizing: border-box;
+  transition: background 100ms linear;
+  &-active {
+    background: #8a8a8a;
+  }
   &-horizontal {
     flex-direction: row;
     width: 20px;
