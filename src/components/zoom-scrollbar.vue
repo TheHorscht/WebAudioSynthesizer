@@ -98,7 +98,7 @@ export default {
       },
       vertical: {
         top: `calc(${self.start * 100}% - 1px)`,
-        height: `calc(${(self.end - self.start) * 100}% + 1px)`,
+        height: `calc(${(self.end - self.start) * 100}% + 2px)`,
       },
     }[self.orientation]),
   }
@@ -142,9 +142,27 @@ export default {
     height: 100%;
     &:first-child {
       left: -5px;
+      &::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        left: 2px;
+        background: black;
+        clip-path: polygon(100% 20%, 50% 50%, 100% 80%);
+      }
     }
     &:last-child {
       right: -5px;
+      &::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        right: 2px;
+        background: black;
+        clip-path: polygon(0% 20%, 50% 50%, 0% 80%);
+      }
     }
   }
   &-vertical {
@@ -153,9 +171,27 @@ export default {
     width: 100%;
     &:first-child {
       top: -5px;
+      &::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 2px;
+        background: black;
+        clip-path: polygon(20% 100%, 50% 50%, 80% 100%);
+      }
     }
     &:last-child {
       bottom: -5px;
+      &::before {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        bottom: 2px;
+        background: black;
+        clip-path: polygon(20% 0%, 50% 50%, 80% 0%);
+      }
     }
   }
   &:first-child {
