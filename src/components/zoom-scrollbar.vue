@@ -93,12 +93,12 @@ export default {
     height: self => parseInt(window.getComputedStyle(self.$refs.scrollbarContainer).height, 10),
     handleStyle: self => ({
       horizontal: {
-        left: `${self.start * 100}%`,
-        width: `${(self.end - self.start) * 100}%`,
+        left: `calc(${self.start * 100}% - 1px)`,
+        width: `calc(${(self.end - self.start) * 100}% + 2px)`,
       },
       vertical: {
-        top: `${self.start * 100}%`,
-        height: `${(self.end - self.start) * 100}%`,
+        top: `calc(${self.start * 100}% - 1px)`,
+        height: `calc(${(self.end - self.start) * 100}% + 1px)`,
       },
     }[self.orientation]),
   }
@@ -107,30 +107,31 @@ export default {
 <style lang="scss" scoped>
 .scrollbar-container {
   border: 1px solid black;
-  background: #e8e6e6;
+  background: #484848;
   &-horizontal {
-    height: 20px;
   }
   &-vertical {
-    width: 20px;
-    height: 100%;
   }
 }
 .handle {
   display: flex;
   justify-content: space-between;
   position: relative;
-  border: 1px solid black;
-  background: #707070;
+  background: #a0a0a0;
+  box-sizing: border-box;
   &-horizontal {
     flex-direction: row;
     width: 20px;
-    height: calc(100% - 2px);
+    height: 100%;
+    border-left: 1px solid black;
+    border-right: 1px solid black;
   }
   &-vertical {
     flex-direction: column;
-    width: calc(100% - 2px);
+    width: 100%;
     height: 20px;
+    border-top: 1px solid black;
+    border-bottom: 1px solid black;
   }
 }
 .resize-handle {
@@ -138,34 +139,30 @@ export default {
   &-horizontal {
     cursor: ew-resize;
     width: 10px;
-    height: calc(100% + 3px);
+    height: 100%;
     &:first-child {
       left: -5px;
-      top: -1px;
     }
     &:last-child {
       right: -5px;
-      top: 1px;
     }
   }
   &-vertical {
     cursor: ns-resize;
     height: 10px;
-    width: calc(100% + 3px);
+    width: 100%;
     &:first-child {
       top: -5px;
-      left: -1px;
     }
     &:last-child {
       bottom: -5px;
-      right: -1px;
     }
   }
   &:first-child {
-    align-self: flex-start;
+    align-self: start;
   }
   &:last-child {
-    align-self: flex-end;
+    align-self: end;
   }
 }
 </style>

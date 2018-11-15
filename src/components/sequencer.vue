@@ -226,9 +226,8 @@ svg {
   @include browser(Firefox) {
     shape-rendering: auto;
   }
-}
-body {
-  height: 100%;
+  position: relative;
+  bottom: 0;
 }
 .note {
   stroke: #3c3434;
