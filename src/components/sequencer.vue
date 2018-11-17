@@ -2,27 +2,60 @@
   <!-- Grid -->
   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
     <!-- Background -->
-    <rect v-for="i in barsVisibleInViewport + 1" :key="'bgrect' + i"
-          :x="(i-1) * beatWidthInViewport - viewportStart * beatWidthInViewport"
-          y="0" :width="beatWidthInViewport" height="100%"
-          :class="(i-1) % 2 == 0 ? 'bg1' : 'bg2'" />
-      <!-- White/Black horizontal lines for black keys -->
-    <rect v-for="i in Math.ceil(octavesVisibleInViewport) * 12" :key="'whiteBlackRect' + i"
+    <rect v-for="i in Math.ceil(numBarsVisibleInViewport * 4 + 1)" :key="'bgrect' + i"
+          :x="(i-1) * noteWidth * 4 - (viewportStart % (1/4)) * noteWidth * 16"
+          :width="noteWidth * 4"
+          y="0" height="100%"
+          :class="(i-1) % 2 === Math.floor((viewportStart % 0.5) * 4) ? 'bg1' : 'bg2'" />
+    <!-- White/Black horizontal lines for black keys -->
+    <rect v-for="i in Math.ceil(numOctavesVisibleInViewport * 12)" :key="'whiteBlackRect' + i"
           :x="0" width="100"
-          :y="(i-1) * noteHeight" :height="noteHeight"
+          :y="(i-1) * noteHeight - (octaveStart % (1/ 12)) * noteHeight * 12"
+          :height="noteHeight"
           class="blackKeyGrid"
-          v-if="[2, 4, 6, 9, 11].includes(i%12)" />
+          v-if="[2, 4, 6, 9, 11].includes(Math.floor(octaveStart*12+i)%12)" />
     <!-- Empty rects -->
-    <line v-for="x in barsVisibleInViewport * 4" :key="`noteLineX${x}`"
-          :x1="(x-1)*noteWidth" :x2="(x-1)*noteWidth"
+    <line v-for="x in Math.ceil(numBarsVisibleInViewport * 16 + 1)" :key="`noteLineX${x}`"
+          :x1="(x-1)*noteWidth - (viewportStart % (1 / 16)) * noteWidth * 16"
+          :x2="(x-1)*noteWidth - (viewportStart % (1 / 16)) * noteWidth * 16"
           y1="0" y2="100"
           class="note-line"
           vector-effect="non-scaling-stroke" />
-    <line v-for="y in Math.floor(octavesVisibleInViewport * 12 + 1)" :key="`noteLineY${y}`"
+    <line v-for="y in Math.ceil(numOctavesVisibleInViewport * 12 + 1)" :key="`noteLineY${y}`"
           x1="0" x2="100"
-          :y1="(y-1)*noteHeight" :y2="(y-1)*noteHeight"
+          :y1="(y-1)*noteHeight - (octaveStart % (1/ 12)) * noteHeight * 12"
+          :y2="(y-1)*noteHeight - (octaveStart % (1/ 12)) * noteHeight * 12"
           class="note-line"
           vector-effect="non-scaling-stroke" />
+    <!-- Lines for beats -->
+    <path v-for="i in Math.ceil(numBarsVisibleInViewport * 4 + 1)" :key="'outline1' + i"
+          :d="`M0 0 L0 100`"
+          :transform="`translate(${(i-1)*noteWidth * 4 - (viewportStart % (1 / 4)) * noteWidth * 16}, 0)`"
+          class="beat-line"
+          vector-effect="non-scaling-stroke" />
+    <!-- Lines for bars -->
+    <line v-for="x in Math.ceil(numBarsVisibleInViewport + 1)" :key="`barLineX${x}`"
+          :x1="(x-1)*noteWidth*16 - (viewportStart % (1 / 1)) * noteWidth * 16"
+          :x2="(x-1)*noteWidth*16 - (viewportStart % (1 / 1)) * noteWidth * 16"
+          y1="0" y2="100"
+          class="bar-line"
+          vector-effect="non-scaling-stroke" />
+    <template v-for="i in Math.ceil(numOctavesVisibleInViewport)">
+      <!-- E -> F separator -->
+      <line :key="'eToFSeparator' + i"
+            x1="0" x2="100"
+            :y1="noteHeight*i*7 + (i-1) * noteHeight * 5 - (octaveStart % 1) * noteHeight * 12"
+            :y2="noteHeight*i*7 + (i-1) * noteHeight * 5 - (octaveStart % 1) * noteHeight * 12"
+            class="e-to-f-line"
+            vector-effect="non-scaling-stroke" />
+      <!-- Octave separator -->
+      <line :key="'octaveSeparator' + i"
+            x1="0" x2="100"
+            :y1="noteHeight*12*i - (octaveStart % 1) * noteHeight * 12"
+            :y2="noteHeight*12*i - (octaveStart % 1) * noteHeight * 12"
+            class="octave-line"
+            vector-effect="non-scaling-stroke" />
+    </template>
     <!-- Placed notes -->
     <rect v-for="note in notes" :key="`note${note.x}-${note.y}`"
           :x="note.x * 100 / 16" :width="100 / 16"
@@ -30,28 +63,6 @@
           stroke-width="0.1"
           class="note note-placed"
           @mousedown="removeNote(note)" />
-    <!-- Outlines to make sections more visible -->
-    <path v-for="i in barsVisibleInViewport + 1" :key="'outline1' + i"
-          :d="`M0 0 L0 100`"
-          :transform="`translate(${(i-1)*beatWidthInViewport}, 0)`"
-          class="line-outline"
-          vector-effect="non-scaling-stroke" />
-    <template v-for="i in Math.floor(octavesVisibleInViewport+0.5)">
-      <!-- E -> F separator -->
-      <line :key="'eToFSeparator' + i"
-            x1="0" x2="100"
-            :y1="noteHeight*i*7 + (i-1) * noteHeight * 5"
-            :y2="noteHeight*i*7 + (i-1) * noteHeight * 5"
-            class="line-outline"
-            vector-effect="non-scaling-stroke" />
-      <!-- Octave separator -->
-      <line :key="'octaveSeparator' + i"
-            x1="0" x2="100"
-            :y1="noteHeight*12*i"
-            :y2="noteHeight*12*i"
-            class="line-outline"
-            vector-effect="non-scaling-stroke" />
-    </template>
     <!-- Playhead -->
     <line v-if="playing"
           :x1="playheadPosition * 100" y1="0"
@@ -220,19 +231,21 @@ export default {
     playheadPosition: self => self.sequencePosition / self.sequenceLength,
     secondsPerSixteenthNote: self => 60 / self.bpm / 4,
     sequenceLength: self => self.secondsPerSixteenthNote * 16,
-    // viewportStart: self => Math.cos(self.dbg_pos) * 0.5 + 0.5,
-    viewportStart: self => self.cycle,
-    // viewportEnd: self => self.viewportStart + (Math.cos(self.dbg_pos) * 0.5 + 0.5) * 1.5 + 0.5,
-    viewportEnd: self => 1.5,
-    beatWidthInViewport: self => 100 / (4 * (self.viewportEnd - self.viewportStart)),
-    barsVisibleInViewport: self => Math.ceil((self.viewportEnd - self.viewportStart) * 4),
+
+    viewportStart: self => -0.5 + self.cycle,
+    viewportEnd: self => self.viewportStart + 1.6,
     octaveStart: self => 0,
-    octaveEnd: self => 1.5,
-    octavesVisibleInViewport: self => self.octaveEnd - self.octaveStart,
-    notesVisibleInViewport: self => self.barsVisibleInViewport * 16,
-    noteWidth: self => self.beatWidthInViewport / 4,
-    noteHeight: self => 100 / (self.octavesVisibleInViewport * 12),
-    cycle: self => Math.cos(self.dbg_pos) * 0.5 + 0.5,
+    octaveEnd: self => 1.6,
+
+    numOctavesVisibleInViewport: self => self.octaveEnd - self.octaveStart,
+    numBarsVisibleInViewport: self => self.viewportEnd - self.viewportStart,
+
+    // beatWidthInViewport: self => 100 / (4 * self.numBarsVisibleInViewport),
+
+    noteWidth: self => 100 / (self.numBarsVisibleInViewport * 16),
+    noteHeight: self => 100 / (self.numOctavesVisibleInViewport * 12),
+
+    cycle: self => Math.cos(self.dbg_pos) * 0.5 + 0.5, // 0 - 1
   },
 }
 </script>
@@ -253,10 +266,28 @@ svg {
 .note-placed {
   fill: #29365a;
 }
+
 .note-line {
   stroke: #3c3434;
   stroke-width: 1;
 }
+.bar-line {
+  stroke: #1d1b1b;
+  stroke-width: 2;
+}
+.octave-line {
+  stroke: #181717;
+  stroke-width: 1;
+}
+.e-to-f-line {
+  stroke: #1d1b1b;
+  stroke-width: 0;
+}
+.beat-line {
+  stroke: #3a3333;
+  stroke-width: 1;
+}
+
 .note-empty {
   fill: transparent;
 }
@@ -268,10 +299,5 @@ svg {
 }
 .blackKeyGrid {
   fill: #575757b8;
-}
-.line-outline {
-  stroke: #181717;
-  fill: none;
-  stroke-width: 1px;
 }
 </style>
