@@ -101,7 +101,7 @@ export default {
       },
       vertical: {
         top: `calc(${self.start * 100}% - 1px)`,
-        height: `calc(${(self.end - self.start) * 100}% + 1px)`,
+        height: `calc(${(self.end - self.start) * 100}% + 2px)`,
       },
     }[self.orientation]),
   }
