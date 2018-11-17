@@ -13,14 +13,16 @@
           class="blackKeyGrid"
           v-if="[2, 4, 6, 9, 11].includes(i%12)" />
     <!-- Empty rects -->
-    <template v-for="j in 12">
-      <rect v-for="(note, i) in notesVisibleInViewport" :key="`emptyrect_${i}_${j}`"
-            :x="(i-1)*noteWidth" :width="noteWidth"
-            :y="(j-1)*noteHeight" :height="noteHeight"
-            stroke-width="0.1"
-            class="note note-empty"
-            @mousedown="placeNote(i, j)" />
-    </template>
+    <line v-for="x in barsVisibleInViewport * 4" :key="`noteLineX${x}`"
+          :x1="(x-1)*noteWidth" :x2="(x-1)*noteWidth"
+          y1="0" y2="100"
+          class="note-line"
+          vector-effect="non-scaling-stroke" />
+    <line v-for="y in Math.floor(octavesVisibleInViewport * 12 + 1)" :key="`noteLineY${y}`"
+          x1="0" x2="100"
+          :y1="(y-1)*noteHeight" :y2="(y-1)*noteHeight"
+          class="note-line"
+          vector-effect="non-scaling-stroke" />
     <!-- Placed notes -->
     <rect v-for="note in notes" :key="`note${note.x}-${note.y}`"
           :x="note.x * 100 / 16" :width="100 / 16"
@@ -219,13 +221,13 @@ export default {
     secondsPerSixteenthNote: self => 60 / self.bpm / 4,
     sequenceLength: self => self.secondsPerSixteenthNote * 16,
     // viewportStart: self => Math.cos(self.dbg_pos) * 0.5 + 0.5,
-    viewportStart: self => 0,
+    viewportStart: self => self.cycle,
     // viewportEnd: self => self.viewportStart + (Math.cos(self.dbg_pos) * 0.5 + 0.5) * 1.5 + 0.5,
     viewportEnd: self => 1.5,
     beatWidthInViewport: self => 100 / (4 * (self.viewportEnd - self.viewportStart)),
     barsVisibleInViewport: self => Math.ceil((self.viewportEnd - self.viewportStart) * 4),
     octaveStart: self => 0,
-    octaveEnd: self => 1.5 + self.cycle,
+    octaveEnd: self => 1.5,
     octavesVisibleInViewport: self => self.octaveEnd - self.octaveStart,
     notesVisibleInViewport: self => self.barsVisibleInViewport * 16,
     noteWidth: self => self.beatWidthInViewport / 4,
@@ -250,6 +252,10 @@ svg {
 }
 .note-placed {
   fill: #29365a;
+}
+.note-line {
+  stroke: #3c3434;
+  stroke-width: 1;
 }
 .note-empty {
   fill: transparent;
