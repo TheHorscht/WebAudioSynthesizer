@@ -70,26 +70,25 @@ export default {
       if (e.target.hasPointerCapture(e.pointerId)) {
         let d = this.orientation === 'horizontal'
                 ? e.movementX / (this.width / (this.max - this.min))
-                : e.movementY / (this.height / (this.max - this.min));
-        if(this.orientation === 'horizontal') {
-          if((d < 0 && e.clientX > this.pointerStartPosition_.x)
-          || (d > 0 && e.clientX < this.pointerStartPosition_.x)) {
-            d = 0;
-          } else if((this.low + d > this.min) && (this.high + d < this.max)) {
-            this.pointerStartPosition_.x += e.movementX;
-          }
-        } else {
-          if((d < 0 && e.clientY > this.pointerStartPosition_.y)
-          || (d > 0 && e.clientY < this.pointerStartPosition_.y)) {
-            d = 0;
-          } else if((this.low + d > this.min) && (this.high + d < this.max)) {
-            this.pointerStartPosition_.y += e.movementY;
-          }
-        }
-        
+                : e.movementY / (this.height / (this.max - this.min));        
         (({
           [MODES.move]: () => {
             let newLow, newHigh;
+            if(this.orientation === 'horizontal') {
+              if((d < 0 && e.clientX > this.pointerStartPosition_.x)
+              || (d > 0 && e.clientX < this.pointerStartPosition_.x)) {
+                return;
+              } else if((this.low + d > this.min) && (this.high + d < this.max)) {
+                this.pointerStartPosition_.x += e.movementX;
+              }
+            } else {
+              if((d < 0 && e.clientY > this.pointerStartPosition_.y)
+              || (d > 0 && e.clientY < this.pointerStartPosition_.y)) {
+                return;
+              } else if((this.low + d > this.min) && (this.high + d < this.max)) {
+                this.pointerStartPosition_.y += e.movementY;
+              }
+            }
             if(this.low + d < this.min) {
               newLow = this.min;
               newHigh = this.high - this.low;
@@ -105,6 +104,21 @@ export default {
           },
           [MODES.resizeStart]: () => {
             let newVal;
+            if(this.orientation === 'horizontal') {
+              if((d < 0 && e.clientX > this.pointerStartPosition_.x)
+              || (d > 0 && e.clientX < this.pointerStartPosition_.x)) {
+                return;
+              } else if((this.low + d > this.min) && (this.low + d < this.high - this.minDistance)) {
+                this.pointerStartPosition_.x += e.movementX;
+              }
+            } else {
+              if((d < 0 && e.clientY > this.pointerStartPosition_.y)
+              || (d > 0 && e.clientY < this.pointerStartPosition_.y)) {
+                return;
+              } else if((this.low + d > this.min) && (this.low + d < this.high - this.minDistance)) {
+                this.pointerStartPosition_.y += e.movementY;
+              }
+            }
             if(this.low + d < this.min) {
               newVal = this.min;
             } else if(this.high - (this.low + d) > this.minDistance) {
@@ -116,6 +130,21 @@ export default {
           },
           [MODES.resizeEnd]: () => {
             let newVal;
+            if(this.orientation === 'horizontal') {
+              if((d < 0 && e.clientX > this.pointerStartPosition_.x)
+              || (d > 0 && e.clientX < this.pointerStartPosition_.x)) {
+                return;
+              } else if((this.high + d < this.max) && (this.high + d > this.low + this.minDistance)) {
+                this.pointerStartPosition_.x += e.movementX;
+              }
+            } else {
+              if((d < 0 && e.clientY > this.pointerStartPosition_.y)
+              || (d > 0 && e.clientY < this.pointerStartPosition_.y)) {
+                return;
+              } else if((this.high + d < this.max) && (this.high + d > this.low + this.minDistance)) {
+                this.pointerStartPosition_.y += e.movementY;
+              }
+            }
             if(this.high + d > this.max) {
               newVal = this.max;
             } else if((this.high + d) - this.low > this.minDistance) {
