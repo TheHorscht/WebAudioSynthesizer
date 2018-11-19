@@ -59,8 +59,13 @@ export default {
       } else if(e.target === this.$refs.resizeEnd) {
         this.mode = MODES.resizeEnd;
       }
-      this.pointerStartPosition_ = { x: e.clientX, y: e.clientY };
+      this.pointerStartPosition_ = {
+        x: (e.clientX - this.$refs.handle.offsetLeft) / this.$refs.handle.offsetWidth,
+        y: (e.clientY - this.$refs.handle.offsetTop) / this.$refs.handle.offsetHeight,
+      };
       e.target.setPointerCapture(e.pointerId)
+      //console.log(e);
+      
     },
     onPointerUp (e) {
       e.target.releasePointerCapture(e.pointerId)
@@ -70,25 +75,28 @@ export default {
       if (e.target.hasPointerCapture(e.pointerId)) {
         let d = this.orientation === 'horizontal'
                 ? e.movementX / (this.width / (this.max - this.min))
-                : e.movementY / (this.height / (this.max - this.min));        
+                : e.movementY / (this.height / (this.max - this.min));
+        const startPosInPixels = {
+          x: this.pointerStartPosition_.x * this.$refs.handle.offsetWidth,
+          y: this.pointerStartPosition_.y * this.$refs.handle.offsetHeight,
+        }
+        if(this.orientation === 'horizontal') {
+          const bla = e.clientX - this.$refs.handle.offsetLeft;
+          if((e.movementX < 0 && bla > startPosInPixels.x)
+          || (e.movementX > 0 && bla < startPosInPixels.x)) {
+              d = 0;
+          }
+        } else {
+          const bla2 = e.clientY - this.$refs.handle.offsetTop;
+          if((e.movementY < 0 && bla2 > startPosInPixels.y)
+          || (e.movementY > 0 && bla2 < startPosInPixels.y)) {
+            d = 0;
+          }
+        }
+
         (({
           [MODES.move]: () => {
             let newLow, newHigh;
-            if(this.orientation === 'horizontal') {
-              if((d < 0 && e.clientX > this.pointerStartPosition_.x)
-              || (d > 0 && e.clientX < this.pointerStartPosition_.x)) {
-                return;
-              } else if((this.low + d > this.min) && (this.high + d < this.max)) {
-                this.pointerStartPosition_.x += e.movementX;
-              }
-            } else {
-              if((d < 0 && e.clientY > this.pointerStartPosition_.y)
-              || (d > 0 && e.clientY < this.pointerStartPosition_.y)) {
-                return;
-              } else if((this.low + d > this.min) && (this.high + d < this.max)) {
-                this.pointerStartPosition_.y += e.movementY;
-              }
-            }
             if(this.low + d < this.min) {
               newLow = this.min;
               newHigh = this.high - this.low;
@@ -104,21 +112,6 @@ export default {
           },
           [MODES.resizeStart]: () => {
             let newVal;
-            if(this.orientation === 'horizontal') {
-              if((d < 0 && e.clientX > this.pointerStartPosition_.x)
-              || (d > 0 && e.clientX < this.pointerStartPosition_.x)) {
-                return;
-              } else if((this.low + d > this.min) && (this.low + d < this.high - this.minDistance)) {
-                this.pointerStartPosition_.x += e.movementX;
-              }
-            } else {
-              if((d < 0 && e.clientY > this.pointerStartPosition_.y)
-              || (d > 0 && e.clientY < this.pointerStartPosition_.y)) {
-                return;
-              } else if((this.low + d > this.min) && (this.low + d < this.high - this.minDistance)) {
-                this.pointerStartPosition_.y += e.movementY;
-              }
-            }
             if(this.low + d < this.min) {
               newVal = this.min;
             } else if(this.high - (this.low + d) > this.minDistance) {
@@ -130,21 +123,6 @@ export default {
           },
           [MODES.resizeEnd]: () => {
             let newVal;
-            if(this.orientation === 'horizontal') {
-              if((d < 0 && e.clientX > this.pointerStartPosition_.x)
-              || (d > 0 && e.clientX < this.pointerStartPosition_.x)) {
-                return;
-              } else if((this.high + d < this.max) && (this.high + d > this.low + this.minDistance)) {
-                this.pointerStartPosition_.x += e.movementX;
-              }
-            } else {
-              if((d < 0 && e.clientY > this.pointerStartPosition_.y)
-              || (d > 0 && e.clientY < this.pointerStartPosition_.y)) {
-                return;
-              } else if((this.high + d < this.max) && (this.high + d > this.low + this.minDistance)) {
-                this.pointerStartPosition_.y += e.movementY;
-              }
-            }
             if(this.high + d > this.max) {
               newVal = this.max;
             } else if((this.high + d) - this.low > this.minDistance) {
