@@ -27,12 +27,25 @@ export default {
       type: String,
       default: 'horizontal',
       validator: value => ['horizontal', 'vertical'].indexOf(value) !== -1
-    }
+    },
+    min: {
+      type: Number,
+      default: 0,
+    },
+    max: {
+      type: Number,
+      default: 1,
+    },
+    low: {
+      type: Number,
+      default: 0.25,
+    },
+    high: {
+      type: Number,
+      default: 0.75,
+    },
   },
   data: () => ({
-    start: 0,
-    end: 0.5,
-    minDistance: 0.1,
     MODES,
     mode: MODES.none,
   }),
@@ -54,38 +67,45 @@ export default {
     onPointerMove (e) {
       if (e.target.hasPointerCapture(e.pointerId)) {
         let d = this.orientation === 'horizontal'
-                ? e.movementX / this.width
-                : e.movementY / this.height;
+                ? e.movementX / (this.width / (this.max - this.min))
+                : e.movementY / (this.height / (this.max - this.min));
         (({
           [MODES.move]: () => {
-            if(this.start + d < 0) {
-              this.end -= this.start;
-              this.start = 0;
-            } else if(this.end + d > 1) {
-              this.start += 1 - this.end;
-              this.end = 1;
+            let newLow, newHigh;
+            if(this.low + d < this.min) {
+              newLow = this.min;
+              newHigh = this.high - this.low;
+            } else if(this.high + d > this.max) {
+              newLow = this.low + (this.max - this.high);
+              newHigh = this.max;
             } else {
-              this.start += d;
-              this.end += d;
+              newLow = this.low + d;
+              newHigh = this.high + d;
             }
+            this.$emit('lowChanged', newLow);
+            this.$emit('highChanged', newHigh);
           },
           [MODES.resizeStart]: () => {
-            if(this.start + d < 0) {
-              this.start = 0;
-            } else if(this.end - (this.start + d) > this.minDistance) {
-              this.start += d;
+            let newVal;
+            if(this.low + d < this.min) {
+              newVal = this.min;
+            } else if(this.high - (this.low + d) > this.minDistance) {
+              newVal = this.low + d;
             } else {
-              this.start = this.end - this.minDistance;
+              newVal = this.high - this.minDistance;
             }
+            this.$emit('lowChanged', newVal);
           },
           [MODES.resizeEnd]: () => {
-            if(this.end + d > 1) {
-              this.end = 1;
-            } else if((this.end + d) - this.start > this.minDistance) {
-              this.end += d;
+            let newVal;
+            if(this.high + d > this.max) {
+              newVal = this.max;
+            } else if((this.high + d) - this.low > this.minDistance) {
+              newVal = this.high + d;
             } else {
-              this.end = this.start + this.minDistance;
+              newVal = this.low + this.minDistance;
             }
+            this.$emit('highChanged', newVal);
           },
         })[this.mode] || (() => null))();
       }
@@ -94,16 +114,15 @@ export default {
   computed: {
     width: self => parseInt(window.getComputedStyle(self.$refs.scrollbarContainer).width, 10),
     height: self => parseInt(window.getComputedStyle(self.$refs.scrollbarContainer).height, 10),
-    handleStyle: self => ({
-      horizontal: {
-        left: `calc(${self.start * 100}% - 1px)`,
-        width: `calc(${(self.end - self.start) * 100}% + 2px)`,
-      },
-      vertical: {
-        top: `calc(${self.start * 100}% - 1px)`,
-        height: `calc(${(self.end - self.start) * 100}% + 2px)`,
-      },
-    }[self.orientation]),
+    handleStyle: self => {
+      const low = `calc(${((self.low - self.min) / (self.max - self.min)) * 100}% - 1px)`;
+      const high = `calc(${(self.high - self.low) / (self.max - self.min) * 100}% + 2px)`;
+      return {
+        horizontal: { left: low, width: high, },
+        vertical: { top: low, height: high, },
+      }[self.orientation];
+    },
+    minDistance: self => (self.max - self.min) * 0.1,
   }
 }
 </script>

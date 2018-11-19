@@ -101,6 +101,25 @@ export default {
       default: 120,
       required: true,
     },
+
+
+
+    viewportStart: {
+      type: Number,
+      default: 0,
+    },
+    viewportEnd: {
+      type: Number,
+      default: 2,
+    },
+    octaveStart: {
+      type: Number,
+      default: 0,
+    },
+    octaveEnd: {
+      type: Number,
+      default: 2,
+    },
   },
   data: () => ({
     notes: [],
@@ -232,15 +251,8 @@ export default {
     secondsPerSixteenthNote: self => 60 / self.bpm / 4,
     sequenceLength: self => self.secondsPerSixteenthNote * 16,
 
-    viewportStart: self => -0.5 + self.cycle,
-    viewportEnd: self => self.viewportStart + 1.6,
-    octaveStart: self => 0,
-    octaveEnd: self => 1.6,
-
     numOctavesVisibleInViewport: self => self.octaveEnd - self.octaveStart,
     numBarsVisibleInViewport: self => self.viewportEnd - self.viewportStart,
-
-    // beatWidthInViewport: self => 100 / (4 * self.numBarsVisibleInViewport),
 
     noteWidth: self => 100 / (self.numBarsVisibleInViewport * 16),
     noteHeight: self => 100 / (self.numOctavesVisibleInViewport * 12),
@@ -299,5 +311,10 @@ svg {
 }
 .blackKeyGrid {
   fill: #575757b8;
+}
+
+.octave-text {
+  // font-size: 3px;
+  fill: yellow;
 }
 </style>

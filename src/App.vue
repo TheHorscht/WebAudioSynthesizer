@@ -93,12 +93,28 @@
     </div>
     <div class="kb-and-sequencer">
       <vue-keyboard ref="keyboard" @noteOn="onKeyboardNoteOn" @noteOff="onKeyboardNoteOff"/>
-      <zoom-scrollbar orientation="horizontal" />
-      <zoom-scrollbar orientation="vertical" />
+      <zoom-scrollbar orientation="horizontal"
+                      :min="0"
+                      :max="2"
+                      :low="horizontalLow"
+                      :high="horizontalHigh"
+                      @lowChanged="onScrollHorizontalLowChanged"
+                      @highChanged="onScrollHorizontalHighChanged" />
+      <zoom-scrollbar orientation="vertical"
+                      :min="0"
+                      :max="2"
+                      :low="verticalLow"
+                      :high="verticalHigh"
+                      @lowChanged="onScrollVerticalLowChanged"
+                      @highChanged="onScrollVerticalHighChanged" />
       <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff"
                     @stop="onSequencerStop"
                     :audioContext="audioCtx"
-                    :bpm="bpm" />
+                    :bpm="bpm"
+                    :viewportStart="horizontalLow"
+                    :viewportEnd="horizontalHigh"
+                    :octaveStart="verticalLow"
+                    :octaveEnd="verticalHigh" />
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
   </div>
@@ -164,6 +180,10 @@ export default {
     filterD: 0.5,
     filterS: 0,
     filterR: 0.01,
+    horizontalLow: 0,
+    horizontalHigh: 1,
+    verticalLow: 0,
+    verticalHigh: 1,
   }),
   mounted () {
     const link = (sourceField, cls, destinationField, transformFunction) => {
@@ -238,6 +258,18 @@ export default {
     },
     onSequencerStop() {
       this.stopAllNotes();
+    },
+    onScrollHorizontalLowChanged(newVal) {
+      this.horizontalLow = newVal;
+    },
+    onScrollHorizontalHighChanged(newVal) {
+      this.horizontalHigh = newVal;
+    },
+    onScrollVerticalLowChanged(newVal) {
+      this.verticalLow = newVal;
+    },
+    onScrollVerticalHighChanged(newVal) {
+      this.verticalHigh = newVal;
     },
     stopAllNotes() {
       this.$refs.keyboard.releaseAllKeys();
