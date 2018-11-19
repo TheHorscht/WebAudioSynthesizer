@@ -48,6 +48,7 @@ export default {
   data: () => ({
     MODES,
     mode: MODES.none,
+    pointerStartPosition_: null,
   }),
   methods: {
     onPointerDown (e) {
@@ -58,6 +59,7 @@ export default {
       } else if(e.target === this.$refs.resizeEnd) {
         this.mode = MODES.resizeEnd;
       }
+      this.pointerStartPosition_ = { x: e.clientX, y: e.clientY };
       e.target.setPointerCapture(e.pointerId)
     },
     onPointerUp (e) {
@@ -69,6 +71,22 @@ export default {
         let d = this.orientation === 'horizontal'
                 ? e.movementX / (this.width / (this.max - this.min))
                 : e.movementY / (this.height / (this.max - this.min));
+        if(this.orientation === 'horizontal') {
+          if((d < 0 && e.clientX > this.pointerStartPosition_.x)
+          || (d > 0 && e.clientX < this.pointerStartPosition_.x)) {
+            d = 0;
+          } else if((this.low + d > this.min) && (this.high + d < this.max)) {
+            this.pointerStartPosition_.x += e.movementX;
+          }
+        } else {
+          if((d < 0 && e.clientY > this.pointerStartPosition_.y)
+          || (d > 0 && e.clientY < this.pointerStartPosition_.y)) {
+            d = 0;
+          } else if((this.low + d > this.min) && (this.high + d < this.max)) {
+            this.pointerStartPosition_.y += e.movementY;
+          }
+        }
+        
         (({
           [MODES.move]: () => {
             let newLow, newHigh;
