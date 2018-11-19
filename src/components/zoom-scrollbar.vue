@@ -99,7 +99,7 @@ export default {
             let newLow, newHigh;
             if(this.low + d < this.min) {
               newLow = this.min;
-              newHigh = this.high - this.low;
+              newHigh = this.high - (this.low - newLow);
             } else if(this.high + d > this.max) {
               newLow = this.low + (this.max - this.high);
               newHigh = this.max;
