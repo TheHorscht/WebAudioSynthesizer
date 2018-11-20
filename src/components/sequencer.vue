@@ -9,12 +9,12 @@
           y="0" height="100%"
           :class="(i-1) % 2 === Math.floor((viewportStart % 0.5) * 4) ? 'bg1' : 'bg2'" />
     <!-- White/Black horizontal lines for black keys -->
-    <rect v-for="i in Math.ceil(numOctavesVisibleInViewport * 12)" :key="'whiteBlackRect' + i"
+    <rect v-for="i in Math.ceil(numOctavesVisibleInViewport * 12) + 2" :key="'whiteBlackRect' + i"
           :x="0" width="100"
-          :y="(i-1) * noteHeight - (octaveStart % (1/ 12)) * noteHeight * 12"
+          :y="100 - (i-1) * noteHeight + (octaveStart % (1/ 12)) * noteHeight * 12"
           :height="noteHeight"
           class="blackKeyGrid"
-          v-if="[2, 4, 6, 9, 11].includes(Math.floor(octaveStart*12+i)%12)" />
+          v-if="[2, 4, 6, 9, 11].includes(Math.ceil((14-i) + 24 - octaveStart * 12)%12)" />
     <!-- Empty rects -->
     <line v-for="x in Math.ceil(numBarsVisibleInViewport * 16 + 1)" :key="`noteLineX${x}`"
           :x1="(x-1)*noteWidth - (viewportStart % (1 / 16)) * noteWidth * 16"
@@ -24,8 +24,8 @@
           vector-effect="non-scaling-stroke" />
     <line v-for="y in Math.ceil(numOctavesVisibleInViewport * 12 + 1)" :key="`noteLineY${y}`"
           x1="0" x2="100"
-          :y1="(y-1)*noteHeight - (octaveStart % (1/ 12)) * noteHeight * 12"
-          :y2="(y-1)*noteHeight - (octaveStart % (1/ 12)) * noteHeight * 12"
+          :y1="100 - (y-1)*noteHeight + (octaveStart % (1/ 12)) * noteHeight * 12"
+          :y2="100 - (y-1)*noteHeight + (octaveStart % (1/ 12)) * noteHeight * 12"
           class="note-line"
           vector-effect="non-scaling-stroke" />
     <!-- Lines for beats -->
@@ -41,19 +41,19 @@
           y1="0" y2="100"
           class="bar-line"
           vector-effect="non-scaling-stroke" />
-    <template v-for="i in Math.ceil(numOctavesVisibleInViewport)">
+    <template v-for="i in Math.ceil(numOctavesVisibleInViewport) + 1">
       <!-- E -> F separator -->
       <line :key="'eToFSeparator' + i"
             x1="0" x2="100"
-            :y1="noteHeight*i*7 + (i-1) * noteHeight * 5 - (octaveStart % 1) * noteHeight * 12"
-            :y2="noteHeight*i*7 + (i-1) * noteHeight * 5 - (octaveStart % 1) * noteHeight * 12"
+            :y1="100 - noteHeight*5*i - (i-1) * noteHeight * 7 + (octaveStart % 1) * noteHeight * 12"
+            :y2="100 - noteHeight*5*i - (i-1) * noteHeight * 7 + (octaveStart % 1) * noteHeight * 12"
             class="e-to-f-line"
             vector-effect="non-scaling-stroke" />
       <!-- Octave separator -->
       <line :key="'octaveSeparator' + i"
             x1="0" x2="100"
-            :y1="noteHeight*12*i - (octaveStart % 1) * noteHeight * 12"
-            :y2="noteHeight*12*i - (octaveStart % 1) * noteHeight * 12"
+            :y1="100 - noteHeight*12*i + (octaveStart % 1) * noteHeight * 12"
+            :y2="100 - noteHeight*12*i + (octaveStart % 1) * noteHeight * 12"
             class="octave-line"
             vector-effect="non-scaling-stroke" />
     </template>
@@ -304,7 +304,7 @@ svg {
 }
 .octave-line {
   stroke: #181717;
-  stroke-width: 1;
+  stroke-width: 0;
 }
 .e-to-f-line {
   stroke: #1d1b1b;
