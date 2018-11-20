@@ -9,12 +9,12 @@
           y="0" height="100%"
           :class="(i-1) % 2 === Math.floor((viewportStart % 0.5) * 4) ? 'bg1' : 'bg2'" />
     <!-- White/Black horizontal lines for black keys -->
-    <rect v-for="i in Math.ceil(numOctavesVisibleInViewport * 12) + 2" :key="'whiteBlackRect' + i"
+    <rect v-for="i in Math.ceil(numOctavesVisibleInViewport * 12) + 1" :key="'whiteBlackRect' + i"
           :x="0" width="100"
-          :y="100 - (i-1) * noteHeight + (octaveStart % (1/ 12)) * noteHeight * 12"
+          :y="100 - (i-0) * noteHeight + (octaveStart % (1/ 12)) * noteHeight * 12"
           :height="noteHeight"
           class="blackKeyGrid"
-          v-if="[2, 4, 6, 9, 11].includes(Math.ceil((14-i) + 24 - octaveStart * 12)%12)" />
+          v-if="[2, 4, 6, 9, 11].includes(Math.ceil((13-i) + 24 - octaveStart * 12)%12)" />
     <!-- Empty rects -->
     <line v-for="x in Math.ceil(numBarsVisibleInViewport * 16 + 1)" :key="`noteLineX${x}`"
           :x1="(x-1)*noteWidth - (viewportStart % (1 / 16)) * noteWidth * 16"
