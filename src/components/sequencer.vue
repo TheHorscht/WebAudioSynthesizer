@@ -59,8 +59,9 @@
     </template>
     <!-- Placed notes -->
     <rect v-for="note in notes" :key="`note${note.x}-${note.y}`"
-          :x="note.x * 100 / 16" :width="100 / 16"
-          :y="note.y * (1 / 12) * 100" :height="(1 / 24) * 100 + '%'"
+          :width="noteWidth" :height="noteHeight"
+          :x="note.x * noteWidth - viewportStart * noteWidth * 16"
+          :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
           stroke-width="0.1"
           class="note note-placed"
           @mousedown="removeNote(note)" />
@@ -171,7 +172,7 @@ export default {
       const bonus = posP > this.playheadPosition ? 0 : 1;
       this.notes.push({
         id: generateNoteId(),
-        pitch: 59 - y, // y geht von 0 bis 23
+        pitch: y,
         x, y,
         onTriggerCount: this.sequenceCurrentLoop + bonus,
         offTriggerCount: this.sequenceCurrentLoop + bonus,
@@ -243,10 +244,9 @@ export default {
       const pixelsPer16th = pixelsPerBar / 16;
       const pixelsPerNote = this.height * (this.noteHeight / 100);
       const x = Math.floor((e.offsetX + this.viewportStart * pixelsPerBar) / pixelsPer16th);
-      // const y = Math.floor((e.offsetY + this.octaveStart * pixelsPerOctave) / pixelsPerNote);
-      const y = Math.floor((this.octaveEnd * pixelsPerOctave - e.offsetY - this.octaveStart * pixelsPerOctave) / pixelsPerNote);
-      //placeNote(x, y);
-      console.log(x, y);
+      const y = Math.floor((this.octaveStart * pixelsPerOctave + (this.height - e.offsetY)) / pixelsPerNote);
+      this.placeNote(x, y);
+      // console.log(x, y);
     }
   },
   watch: {

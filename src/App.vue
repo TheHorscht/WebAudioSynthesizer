@@ -101,8 +101,8 @@
                       @lowChanged="onScrollHorizontalLowChanged"
                       @highChanged="onScrollHorizontalHighChanged" />
       <zoom-scrollbar orientation="vertical"
-                      :min="0"
-                      :max="2"
+                      :min="4"
+                      :max="6"
                       :low="verticalLow"
                       :high="verticalHigh"
                       :reverse="true"
@@ -183,8 +183,8 @@ export default {
     filterR: 0.01,
     horizontalLow: 0,
     horizontalHigh: 1,
-    verticalLow: 0,
-    verticalHigh: 1,
+    verticalLow: 4,
+    verticalHigh: 5,
   }),
   mounted () {
     const link = (sourceField, cls, destinationField, transformFunction) => {
