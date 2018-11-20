@@ -58,16 +58,20 @@ export default {
         this.mode = MODES.move;
       } else if(e.target === this.$refs.resizeStart) {
         this.mode = MODES.resizeStart;
+        if(this.reverse) {
+          this.mode = MODES.resizeEnd;
+        }
       } else if(e.target === this.$refs.resizeEnd) {
         this.mode = MODES.resizeEnd;
+        if(this.reverse) {
+          this.mode = MODES.resizeStart;
+        }
       }
       this.pointerStartPosition_ = {
         x: (e.clientX - this.$refs.handle.offsetLeft) / this.$refs.handle.offsetWidth,
         y: (e.clientY - this.$refs.handle.offsetTop) / this.$refs.handle.offsetHeight,
       };
       e.target.setPointerCapture(e.pointerId)
-      //console.log(e);
-      
     },
     onPointerUp (e) {
       e.target.releasePointerCapture(e.pointerId)
@@ -81,6 +85,9 @@ export default {
         const startPosInPixels = {
           x: this.pointerStartPosition_.x * this.$refs.handle.offsetWidth,
           y: this.pointerStartPosition_.y * this.$refs.handle.offsetHeight,
+        }
+        if(this.reverse) {
+          d *= -1;
         }
         if(this.orientation === 'horizontal') {
           const bla = e.clientX - this.$refs.handle.offsetLeft;
@@ -142,11 +149,16 @@ export default {
     width: self => parseInt(window.getComputedStyle(self.$refs.scrollbarContainer).width, 10),
     height: self => parseInt(window.getComputedStyle(self.$refs.scrollbarContainer).height, 10),
     handleStyle: self => {
-      const low = `calc(${((self.low - self.min) / (self.max - self.min)) * 100}% - 1px)`;
-      const high = `calc(${(self.high - self.low) / (self.max - self.min) * 100}% + 2px)`;
+      let pos = `calc(${((self.low - self.min) / (self.max - self.min)) * 100}% - 1px)`;
+      let size = `calc(${(self.high - self.low) / (self.max - self.min) * 100}% + 2px)`;
+      if(self.reverse) {
+        pos = `calc(${(1-((self.high - self.min) / (self.max - self.min))) * 100}% - 1px)`;
+        //pos = `calc(${(1- ((50       - 0)         / (200      - 0)))        * 100}% - 1px)`;
+        size = `calc(${(self.high - self.low) / (self.max - self.min) * 100}% + 2px)`;
+      }
       return {
-        horizontal: { left: low, width: high, },
-        vertical: { top: low, height: high, },
+        horizontal: { left: pos, width: size, },
+        vertical: { top: pos, height: size, },
       }[self.orientation];
     },
     minDistance: self => (self.max - self.min) * 0.1,

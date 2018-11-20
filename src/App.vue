@@ -105,6 +105,7 @@
                       :max="2"
                       :low="verticalLow"
                       :high="verticalHigh"
+                      :reverse="true"
                       @lowChanged="onScrollVerticalLowChanged"
                       @highChanged="onScrollVerticalHighChanged" />
       <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff"
