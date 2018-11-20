@@ -11,8 +11,6 @@
   </div>
 </template>
 <script>
-import clamp from 'clamp'
-
 const MODES = {
   none: 0,
   move: 1,
@@ -44,6 +42,10 @@ export default {
       type: Number,
       default: 0.75,
     },
+    reverse: {
+      type: Boolean,
+      default: false,
+    }
   },
   data: () => ({
     MODES,

@@ -1,6 +1,7 @@
 <template>
   <!-- Grid -->
-  <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+  <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"
+       @pointerdown="onPointerDown">
     <!-- Background -->
     <rect v-for="i in Math.ceil(numBarsVisibleInViewport * 4 + 1)" :key="'bgrect' + i"
           :x="(i-1) * noteWidth * 4 - (viewportStart % (1/4)) * noteWidth * 16"
@@ -84,14 +85,14 @@ let sequenceStartTime = 0;
 export default {
   name: 'VueSequencer',
   props: {
-    width: {
+/*     width: {
       type: Number,
       default: 800,
-    },
-    height: {
+    }, */
+/*     height: {
       type: Number,
       default: 400,
-    },
+    }, */
     audioContext: {
       type: AudioContext,
       required: true,
@@ -235,6 +236,18 @@ export default {
     resume() {
       this.playing = true;
     },
+    onPointerDown(e) {
+      // placeNote
+      const pixelsPerBar = this.width / this.numBarsVisibleInViewport;
+      const pixelsPerOctave = this.height / this.numOctavesVisibleInViewport;
+      const pixelsPer16th = pixelsPerBar / 16;
+      const pixelsPerNote = this.height * (this.noteHeight / 100);
+      const x = Math.floor((e.offsetX + this.viewportStart * pixelsPerBar) / pixelsPer16th);
+      // const y = Math.floor((e.offsetY + this.octaveStart * pixelsPerOctave) / pixelsPerNote);
+      const y = Math.floor((this.octaveEnd * pixelsPerOctave - e.offsetY - this.octaveStart * pixelsPerOctave) / pixelsPerNote);
+      //placeNote(x, y);
+      console.log(x, y);
+    }
   },
   watch: {
     bpm(newBPM, oldBPM) {
@@ -258,6 +271,8 @@ export default {
     noteHeight: self => 100 / (self.numOctavesVisibleInViewport * 12),
 
     cycle: self => Math.cos(self.dbg_pos) * 0.5 + 0.5, // 0 - 1
+    width: self => parseInt(window.getComputedStyle(self.$el).width, 10),
+    height: self => parseInt(window.getComputedStyle(self.$el).height, 10),
   },
 }
 </script>
