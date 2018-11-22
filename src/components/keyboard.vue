@@ -1,32 +1,21 @@
 <template>
   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <rect v-for="i in Math.ceil(keysVisibleInViewport) + 2" v-if="[1,3,5,7,8,10,12].map(v => v-0).includes(((i-1)+Math.floor(keyOffset))%12+1)" :key="'whiteKey'+i"
-            :class="['white-key', isKeyDown_[Math.floor(keyOffset)+(12-i)] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
+        <rect v-for="i in 96" v-if="isWhiteKey(i) && isWhiteKeyVisible(i)" :key="'whiteKey'+i"
+            :class="['white-key', isKeyDown_[i-1] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
             x="0" width="100"
-            :y="100
-              - whitKeyPosOrg[reverseCappedIndex_(i + Math.floor(keyOffset))]
-              + ((octaveStart % 1) / octavesVisibleInViewport) * 100
-              - Math.floor((i-1) / 12) * 100"
-            :height="keyHeights[reverseCappedIndex_(i + Math.floor(keyOffset))] / octavesVisibleInViewport"
-            :data-b="'i: ' + i + ' ' + reverseCappedIndex_(i + Math.floor(keyOffset))"
-            @pointerdown="keyDown(48+(12-i), true, $event)"
-            @pointerup="keyUp(48+(12-i), true, $event)" />
-        <!-- whiteKeysPos: self =>
-        [88, 0, 71, 0, 58.33, 46.57, 0, 29.5, 0, 12.5, 0, 0]
-        .map(v => v / self.octavesVisibleInViewport), -->
-        <text v-for="i in Math.ceil(keysVisibleInViewport) + 2" v-if="[1,3,5,7,8,10,12].includes(((i-1)+Math.floor(octaveStart * 12))%12+1)" :key="'text'+i"
-              x="0"
-              :y="whitKeyPosOrg[reverseCappedIndex_(i + Math.floor(keyOffset))]"
-              :height="keyHeights[reverseCappedIndex_(i + Math.floor(keyOffset))] / octavesVisibleInViewport"
-              alignment-baseline="hanging" >
-          {{ i + Math.floor(keyOffset) }}
-        </text>
-<!--       <rect v-for="i in keysVisibleInViewport" v-if="[2,4,6,9,11].includes((i-1)%12+1)" :key="'blackKey'+i"
-            x="0" :y="Math.floor((i-1) / 12) * 100 + ((i-1)%12) * 100/12"
-            width="63" :height="100/12"
-            :class="['black-key', isKeyDown_[48+(12-i)] ? 'black-key-down' : '']"
-            @pointerdown="keyDown(48+(12-i), true, $event)"
-            @pointerup="keyUp(48+(12-i), true, $event)" /> -->
+            :y="100 - whiteKeyYPositionsAbsolute[i-1] + octaveStart * (100 / numOctavesVisibleInViewport)"
+            :height="whiteKeyHeights_[(i-1)%12] / numOctavesVisibleInViewport"
+            :data-b="`i: ${i}, `"
+            @pointerdown="keyDown(i-1, true, $event)"
+            @pointerup="keyUp(i-1, true, $event)" />
+      <rect v-for="i in 96" v-if="isBlackKey(i) && isBlackKeyVisible(i)" :key="'blackKey'+i"
+            x="0" width="63"
+            :y="100 - blackKeyYPositionsAbsolute[i-1] + octaveStart * (100 / numOctavesVisibleInViewport)"
+            :height="blackKeyHeights_[(i-1)%12] / numOctavesVisibleInViewport"
+            :class="['black-key', isKeyDown_[i-1] ? 'black-key-down' : '']"
+            :data-b="`i: ${i}, `"
+            @pointerdown="keyDown(i-1, true, $event)"
+            @pointerup="keyUp(i-1, true, $event)" />
   </svg>
 </template>
 <script>
@@ -87,8 +76,44 @@ export default {
   },
   data: () => ({
     isKeyDown_: {},
+    whiteKeyHeights_: [12.285, 0, 17.285, 0, 13.285, 12.285, 0, 16.285, 0, 16.285, 0, 12.285],
+    blackKeyHeights_: Array(12).fill(100/12),
   }),
+  computed: {
+    numOctavesVisibleInViewport: self => (self.octaveEnd - self.octaveStart),
+    numKeysVisibleInViewport: self => self.numOctavesVisibleInViewport * 12,
+    keyOffset: self => (self.octaveStart % 1) * 12,
+    whiteKeyYPositions: self => {
+      let curPos = 0;
+      return self.whiteKeyHeights_.map(v => {
+        curPos += v;
+        return curPos;
+      });
+    },
+    whiteKeyYPositionsAbsolute: self => {
+      let posis = [];
+      for(let i = 0; i < 8; i++) {
+        posis.push(...self.whiteKeyYPositions.map(v => v / self.numOctavesVisibleInViewport + i * (100 / self.numOctavesVisibleInViewport)));
+      }
+      return posis;
+    },
+    blackKeyYPositions: self => {
+      let curPos = 0;
+      return self.blackKeyHeights_.map(v => {
+        curPos += v;
+        return curPos;
+      });
+    },
+    blackKeyYPositionsAbsolute: self => {
+      let posis = [];
+      for(let i = 0; i < 8; i++) {
+        posis.push(...self.blackKeyYPositions.map(v => v / self.numOctavesVisibleInViewport + i * (100 / self.numOctavesVisibleInViewport)));
+      }
+      return posis;
+    },
+  },
   mounted() {
+    window.shit = this;
     window.addEventListener('key-event-down-norepeat', e => {
       e = e.detail;
       if(e.code in keysToMidiNote) {
@@ -144,29 +169,19 @@ export default {
         this.$set(this.isKeyDown_, keyNumber, false);
       }
     },
-    // Input: 1 to infinity, output: 11 to 0 repeating
-    reverseCappedIndex_(i) {
-      return (12 - (( i - 1 ) % 12 + 1 ));
-    }
-  },
-  computed: {
-    octavesVisibleInViewport: self => (self.octaveEnd - self.octaveStart),
-    keysVisibleInViewport: self => self.octavesVisibleInViewport * 12,
-    // keyOffset: self => self.octaveStart * 12,
-    keyOffset: self => (self.octaveStart % 1) * 12,
-    /* whiteKeysPos: self => [0, 0,  0, 12.5, 0, 29.5, 0, 46.57,  58.33, 0, 71, 0, 88].map(v => v / self.octavesVisibleInViewport), */
-    //                         0   1   2  3      4      5  6     7  8     9 10 11 
-    // whiteKeyPosesOrg: self => [88, 0, 71, 0, 58.33, 46.57, 0, 29.5, 0, 12.5, 0, 0],
-    //whiteKeysPos: self => self.whiteKeyPosesOrg.map(v => v / self.octavesVisibleInViewport),
-    keyHeights: self => [14.285, 0, 14.285, 0, 14.285, 14.285, 0, 14.285, 0, 14.285, 0, 14.285],
-    whitKeyPosOrg: self => {
-      let curPos = 0;
-      return self.keyHeights.map(v => {
-        curPos += v;
-        return curPos;
-      }).reverse();
+    isWhiteKeyVisible(i) {
+      return i > this.octaveStart * 12 - 1 && i < this.octaveEnd * 12 + 2;
     },
-  }
+    isWhiteKey(i) {
+      return [1,3,5,6,8,10,12].includes((i-1)%12+1);
+    },
+    isBlackKeyVisible(i) {
+      return i > this.octaveStart * 12 - 1 && i < this.octaveEnd * 12 + 2;
+    },
+    isBlackKey(i) {
+      return [2,4,7,9,11].includes((i-1)%12+1);
+    },
+  },
 }
 </script>
 <style lang="scss" scoped>
