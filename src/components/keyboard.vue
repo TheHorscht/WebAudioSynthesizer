@@ -1,19 +1,21 @@
 <template>
-  <svg width="100%" height="100%" viewBox="0 0 100 200" preserveAspectRatio="none">
-        <rect v-for="i in 24" v-if="[1,3,5,7,8,10,12].includes((i-1)%12+1)" :key="'whiteKey'+i"
-            :class="['white-key', isKeyDown_[48+(12-i)] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
-            x="0" :y="Math.floor((i-1) / 12) * 100 + [0, 0,  0, 12.5, 0, 29.5, 0, 46.57,  58.33, 0, 71, 0, 88][(i-1)%12+1]"
-            width="100"
-            :height="[0, 12.5, 0, 17,   0, 17.08,   0, 11.75, 13, 0, 17, 0, 12][(i-1)%12+1]"
-            :data-b="i"
-            @pointerdown="keyDown(48+(12-i), true, $event)"
-            @pointerup="keyUp(48+(12-i), true, $event)" />
-      <rect v-for="i in 24" v-if="[2,4,6,9,11].includes((i-1)%12+1)" :key="'blackKey'+i"
-            x="0" :y="Math.floor((i-1) / 12) * 100 + ((i-1)%12) * 100/12"
-            width="63" :height="100/12"
-            :class="['black-key', isKeyDown_[48+(12-i)] ? 'black-key-down' : '']"
-            @pointerdown="keyDown(48+(12-i), true, $event)"
-            @pointerup="keyUp(48+(12-i), true, $event)" />
+  <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <rect v-for="i in 96" v-if="isWhiteKey(i) && isWhiteKeyVisible(i)" :key="'whiteKey'+i"
+            :class="['white-key', isKeyDown_[i-1] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
+            x="0" width="100"
+            :y="100 - whiteKeyYPositionsAbsolute[i-1] + octaveStart * (100 / numOctavesVisibleInViewport)"
+            :height="whiteKeyHeights_[(i-1)%12] / numOctavesVisibleInViewport"
+            :data-b="`i: ${i}, `"
+            @pointerdown="keyDown(i-1, true, $event)"
+            @pointerup="keyUp(i-1, true, $event)" />
+      <rect v-for="i in 96" v-if="isBlackKey(i) && isBlackKeyVisible(i)" :key="'blackKey'+i"
+            x="0" width="63"
+            :y="100 - blackKeyYPositionsAbsolute[i-1] + octaveStart * (100 / numOctavesVisibleInViewport)"
+            :height="blackKeyHeights_[(i-1)%12] / numOctavesVisibleInViewport"
+            :class="['black-key', isKeyDown_[i-1] ? 'black-key-down' : '']"
+            :data-b="`i: ${i}, `"
+            @pointerdown="keyDown(i-1, true, $event)"
+            @pointerup="keyUp(i-1, true, $event)" />
   </svg>
 </template>
 <script>
@@ -62,10 +64,56 @@ let keysToMidiNote = {
 
 export default {
   name: 'VueKeyboard',
+  props: {
+    octaveStart: {
+      type: Number,
+      default: 0,
+    },
+    octaveEnd: {
+      type: Number,
+      default: 2,
+    },
+  },
   data: () => ({
     isKeyDown_: {},
+    whiteKeyHeights_: [12.285, 0, 17.285, 0, 12.1, 12.285, 0, 16.285, 0, 16.285, 0, 13.475],
+    blackKeyHeights_: Array(12).fill(100/12),
   }),
+  computed: {
+    numOctavesVisibleInViewport: self => (self.octaveEnd - self.octaveStart),
+    numKeysVisibleInViewport: self => self.numOctavesVisibleInViewport * 12,
+    keyOffset: self => (self.octaveStart % 1) * 12,
+    whiteKeyYPositions: self => {
+      let curPos = 0;
+      return self.whiteKeyHeights_.map(v => {
+        curPos += v;
+        return curPos;
+      });
+    },
+    whiteKeyYPositionsAbsolute: self => {
+      let posis = [];
+      for(let i = 0; i < 8; i++) {
+        posis.push(...self.whiteKeyYPositions.map(v => v / self.numOctavesVisibleInViewport + i * (100 / self.numOctavesVisibleInViewport)));
+      }
+      return posis;
+    },
+    blackKeyYPositions: self => {
+      let curPos = 0;
+      return self.blackKeyHeights_.map(v => {
+        curPos += v;
+        return curPos;
+      });
+    },
+    blackKeyYPositionsAbsolute: self => {
+      let posis = [];
+      for(let i = 0; i < 8; i++) {
+        posis.push(...self.blackKeyYPositions.map(v => v / self.numOctavesVisibleInViewport + i * (100 / self.numOctavesVisibleInViewport)));
+      }
+      return posis;
+    },
+  },
   mounted() {
+    window.shit = this;
     window.addEventListener('key-event-down-norepeat', e => {
       e = e.detail;
       if(e.code in keysToMidiNote) {
@@ -120,7 +168,19 @@ export default {
       for(let keyNumber in this.isKeyDown_) {
         this.$set(this.isKeyDown_, keyNumber, false);
       }
-    }
+    },
+    isWhiteKeyVisible(i) {
+      return i > this.octaveStart * 12 - 1 && i < this.octaveEnd * 12 + 2;
+    },
+    isWhiteKey(i) {
+      return [1,3,5,6,8,10,12].includes((i-1)%12+1);
+    },
+    isBlackKeyVisible(i) {
+      return i > this.octaveStart * 12 - 1 && i < this.octaveEnd * 12 + 2;
+    },
+    isBlackKey(i) {
+      return [2,4,7,9,11].includes((i-1)%12+1);
+    },
   },
 }
 </script>

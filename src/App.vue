@@ -92,11 +92,32 @@
       BPM: {{ bpm }}
     </div>
     <div class="kb-and-sequencer">
-      <vue-keyboard ref="keyboard" @noteOn="onKeyboardNoteOn" @noteOff="onKeyboardNoteOff"/>
+      <vue-keyboard ref="keyboard" @noteOn="onKeyboardNoteOn" @noteOff="onKeyboardNoteOff"
+                    :octaveStart="verticalLow" 
+                    :octaveEnd="verticalHigh" />
+      <zoom-scrollbar orientation="horizontal"
+                      :min="0"
+                      :max="2"
+                      :low="horizontalLow"
+                      :high="horizontalHigh"
+                      @lowChanged="onScrollHorizontalLowChanged"
+                      @highChanged="onScrollHorizontalHighChanged" />
+      <zoom-scrollbar orientation="vertical"
+                      :min="4"
+                      :max="6"
+                      :low="verticalLow"
+                      :high="verticalHigh"
+                      :reverse="true"
+                      @lowChanged="onScrollVerticalLowChanged"
+                      @highChanged="onScrollVerticalHighChanged" />
       <vue-sequencer ref="sequencer" @noteOn="onSequencerNoteOn" @noteOff="onSequencerNoteOff"
-                     @stop="onSequencerStop"
-                     :audioContext="audioCtx"
-                     :bpm="bpm" />
+                    @stop="onSequencerStop"
+                    :audioContext="audioCtx"
+                    :bpm="bpm"
+                    :viewportStart="horizontalLow"
+                    :viewportEnd="horizontalHigh"
+                    :octaveStart="verticalLow"
+                    :octaveEnd="verticalHigh" />
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
   </div>
@@ -107,6 +128,7 @@ import knob from './components/knob'
 import vueSlider from 'vue-slider-component'
 import vueKeyboard from './components/keyboard'
 import vueSequencer from './components/sequencer'
+import zoomScrollbar from './components/zoom-scrollbar'
 import sliderConfig from './slider-config'
 import Voice, { SHAPES } from './voice'
 
@@ -127,6 +149,7 @@ export default {
     vueSlider,
     vueKeyboard,
     vueSequencer,
+    zoomScrollbar,
   },
   data: () => ({
     sliderConfig,
@@ -160,6 +183,10 @@ export default {
     filterD: 0.5,
     filterS: 0,
     filterR: 0.01,
+    horizontalLow: 0,
+    horizontalHigh: 1,
+    verticalLow: 4,
+    verticalHigh: 5,
   }),
   mounted () {
     const link = (sourceField, cls, destinationField, transformFunction) => {
@@ -169,7 +196,6 @@ export default {
         } else {
           cls[destinationField] = this[sourceField];
         }
-        console.log("change", sourceField, destinationField)
       }, { immediate: true });
     }
     link('volumeA', Voice, 'volumeAttack');
@@ -235,6 +261,18 @@ export default {
     },
     onSequencerStop() {
       this.stopAllNotes();
+    },
+    onScrollHorizontalLowChanged(newVal) {
+      this.horizontalLow = newVal;
+    },
+    onScrollHorizontalHighChanged(newVal) {
+      this.horizontalHigh = newVal;
+    },
+    onScrollVerticalLowChanged(newVal) {
+      this.verticalLow = newVal;
+    },
+    onScrollVerticalHighChanged(newVal) {
+      this.verticalHigh = newVal;
     },
     stopAllNotes() {
       this.$refs.keyboard.releaseAllKeys();
@@ -325,13 +363,23 @@ fieldset {
 }
 .kb-and-sequencer {
   display: grid;
-  grid-template-columns: 100px auto;
-  resize: both;
-  overflow: scroll;
-  
-  min-width: 400px;
-  min-height: 400px;
-  max-width: 800px;
-  max-height: 800px;
+  grid-template-columns: 100px 700px 20px;
+  grid-template-rows: 20px 600px;
+  > :nth-child(1) {
+    grid-row: 2 / 3;
+    grid-column: 1;
+  }
+  > :nth-child(2) {
+    grid-row: 1;
+    grid-column: 2;
+  }
+  > :nth-child(3) {
+    grid-row: 2;
+    grid-column: 3;
+  }
+  > :nth-child(4) {
+    grid-row: 2;
+    grid-column: 2;
+  }
 }
 </style>
