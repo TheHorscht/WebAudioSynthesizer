@@ -92,7 +92,9 @@
       BPM: {{ bpm }}
     </div>
     <div class="kb-and-sequencer">
-      <vue-keyboard ref="keyboard" @noteOn="onKeyboardNoteOn" @noteOff="onKeyboardNoteOff"/>
+      <vue-keyboard ref="keyboard" @noteOn="onKeyboardNoteOn" @noteOff="onKeyboardNoteOff"
+                    :octaveStart="verticalLow" 
+                    :octaveEnd="verticalHigh" />
       <zoom-scrollbar orientation="horizontal"
                       :min="0"
                       :max="2"
@@ -364,7 +366,7 @@ fieldset {
   grid-template-columns: 100px 700px 20px;
   grid-template-rows: 20px 600px;
   > :nth-child(1) {
-    grid-row: 1 / 3;
+    grid-row: 2 / 3;
     grid-column: 1;
   }
   > :nth-child(2) {

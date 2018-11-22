@@ -1,19 +1,25 @@
 <template>
-  <svg width="100%" height="100%" viewBox="0 0 100 200" preserveAspectRatio="none">
-        <rect v-for="i in 24" v-if="[1,3,5,7,8,10,12].includes((i-1)%12+1)" :key="'whiteKey'+i"
-            :class="['white-key', isKeyDown_[48+(12-i)] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
-            x="0" :y="Math.floor((i-1) / 12) * 100 + [0, 0,  0, 12.5, 0, 29.5, 0, 46.57,  58.33, 0, 71, 0, 88][(i-1)%12+1]"
-            width="100"
-            :height="[0, 12.5, 0, 17,   0, 17.08,   0, 11.75, 13, 0, 17, 0, 12][(i-1)%12+1]"
-            :data-b="i"
+  <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <rect v-for="i in Math.ceil(keysVisibleInViewport) + 2" v-if="[1,3,5,7,8,10,12].map(v => v-0).includes(((i-1)+Math.floor(keyOffset))%12+1)" :key="'whiteKey'+i"
+            :class="['white-key', isKeyDown_[Math.floor(keyOffset)+(12-i)] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
+            x="0" width="100"
+            :y="100 - whiteKeysPos[reverseCappedIndex_(i + Math.floor(keyOffset))] + ((octaveStart % 1) / octavesVisibleInViewport) * 100 - Math.floor((i-1) / 12) * 100"
+            :height="[12, 0, 17, 0, 13, 11.75, 0, 17.08, 0, 17, 0, 12.5, 0][reverseCappedIndex_(i + Math.floor(keyOffset))] / octavesVisibleInViewport"
+            :data-b="reverseCappedIndex_(i + Math.floor(keyOffset))"
             @pointerdown="keyDown(48+(12-i), true, $event)"
             @pointerup="keyUp(48+(12-i), true, $event)" />
-      <rect v-for="i in 24" v-if="[2,4,6,9,11].includes((i-1)%12+1)" :key="'blackKey'+i"
+        <text v-for="i in Math.ceil(keysVisibleInViewport) + 2" v-if="[1,3,5,7,8,10,12].includes(((i-1)+Math.floor(octaveStart * 12))%12+1)" :key="'text'+i"
+              x="0" :y="100 - whiteKeysPos[reverseCappedIndex_(i + Math.floor(keyOffset))]"
+              :height="[12, 0, 17, 0, 13, 11.75, 0, 17.08, 0, 17, 0, 12.5, 0][reverseCappedIndex_(i + Math.floor(keyOffset))] / octavesVisibleInViewport"
+              alignment-baseline="hanging" >
+          {{ i + Math.floor(keyOffset) }}
+        </text>
+<!--       <rect v-for="i in keysVisibleInViewport" v-if="[2,4,6,9,11].includes((i-1)%12+1)" :key="'blackKey'+i"
             x="0" :y="Math.floor((i-1) / 12) * 100 + ((i-1)%12) * 100/12"
             width="63" :height="100/12"
             :class="['black-key', isKeyDown_[48+(12-i)] ? 'black-key-down' : '']"
             @pointerdown="keyDown(48+(12-i), true, $event)"
-            @pointerup="keyUp(48+(12-i), true, $event)" />
+            @pointerup="keyUp(48+(12-i), true, $event)" /> -->
   </svg>
 </template>
 <script>
@@ -62,6 +68,16 @@ let keysToMidiNote = {
 
 export default {
   name: 'VueKeyboard',
+  props: {
+    octaveStart: {
+      type: Number,
+      default: 0,
+    },
+    octaveEnd: {
+      type: Number,
+      default: 2,
+    },
+  },
   data: () => ({
     isKeyDown_: {},
   }),
@@ -120,8 +136,20 @@ export default {
       for(let keyNumber in this.isKeyDown_) {
         this.$set(this.isKeyDown_, keyNumber, false);
       }
+    },
+    // Input: 1 to infinity, output: 11 to 0 repeating
+    reverseCappedIndex_(i) {
+      return (12 - (( i - 1 ) % 12 + 1 ));
     }
   },
+  computed: {
+    octavesVisibleInViewport: self => (self.octaveEnd - self.octaveStart),
+    keysVisibleInViewport: self => self.octavesVisibleInViewport * 12,
+    // keyOffset: self => self.octaveStart * 12,
+    keyOffset: self => (self.octaveStart % 1) * 12,
+    /* whiteKeysPos: self => [0, 0,  0, 12.5, 0, 29.5, 0, 46.57,  58.33, 0, 71, 0, 88].map(v => v / self.octavesVisibleInViewport), */
+    whiteKeysPos: self => [88, 0, 71, 0, 58.33, 46.57, 0, 29.5, 0, 12.5, 0, 0].map(v => v / self.octavesVisibleInViewport),
+  }
 }
 </script>
 <style lang="scss" scoped>
