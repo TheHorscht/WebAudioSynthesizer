@@ -76,7 +76,7 @@ export default {
   },
   data: () => ({
     isKeyDown_: {},
-    whiteKeyHeights_: [12.285, 0, 17.285, 0, 13.285, 12.285, 0, 16.285, 0, 16.285, 0, 12.285],
+    whiteKeyHeights_: [12.285, 0, 17.285, 0, 12.1, 12.285, 0, 16.285, 0, 16.285, 0, 13.475],
     blackKeyHeights_: Array(12).fill(100/12),
   }),
   computed: {
