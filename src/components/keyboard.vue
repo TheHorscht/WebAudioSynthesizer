@@ -3,14 +3,21 @@
         <rect v-for="i in Math.ceil(keysVisibleInViewport) + 2" v-if="[1,3,5,7,8,10,12].map(v => v-0).includes(((i-1)+Math.floor(keyOffset))%12+1)" :key="'whiteKey'+i"
             :class="['white-key', isKeyDown_[Math.floor(keyOffset)+(12-i)] ? 'white-key-down' : '']" vector-effect="non-scaling-stroke"
             x="0" width="100"
-            :y="100 - whiteKeysPos[reverseCappedIndex_(i + Math.floor(keyOffset))] + ((octaveStart % 1) / octavesVisibleInViewport) * 100 - Math.floor((i-1) / 12) * 100"
-            :height="[12, 0, 17, 0, 13, 11.75, 0, 17.08, 0, 17, 0, 12.5, 0][reverseCappedIndex_(i + Math.floor(keyOffset))] / octavesVisibleInViewport"
-            :data-b="reverseCappedIndex_(i + Math.floor(keyOffset))"
+            :y="100
+              - whitKeyPosOrg[reverseCappedIndex_(i + Math.floor(keyOffset))]
+              + ((octaveStart % 1) / octavesVisibleInViewport) * 100
+              - Math.floor((i-1) / 12) * 100"
+            :height="keyHeights[reverseCappedIndex_(i + Math.floor(keyOffset))] / octavesVisibleInViewport"
+            :data-b="'i: ' + i + ' ' + reverseCappedIndex_(i + Math.floor(keyOffset))"
             @pointerdown="keyDown(48+(12-i), true, $event)"
             @pointerup="keyUp(48+(12-i), true, $event)" />
+        <!-- whiteKeysPos: self =>
+        [88, 0, 71, 0, 58.33, 46.57, 0, 29.5, 0, 12.5, 0, 0]
+        .map(v => v / self.octavesVisibleInViewport), -->
         <text v-for="i in Math.ceil(keysVisibleInViewport) + 2" v-if="[1,3,5,7,8,10,12].includes(((i-1)+Math.floor(octaveStart * 12))%12+1)" :key="'text'+i"
-              x="0" :y="100 - whiteKeysPos[reverseCappedIndex_(i + Math.floor(keyOffset))]"
-              :height="[12, 0, 17, 0, 13, 11.75, 0, 17.08, 0, 17, 0, 12.5, 0][reverseCappedIndex_(i + Math.floor(keyOffset))] / octavesVisibleInViewport"
+              x="0"
+              :y="whitKeyPosOrg[reverseCappedIndex_(i + Math.floor(keyOffset))]"
+              :height="keyHeights[reverseCappedIndex_(i + Math.floor(keyOffset))] / octavesVisibleInViewport"
               alignment-baseline="hanging" >
           {{ i + Math.floor(keyOffset) }}
         </text>
@@ -148,7 +155,17 @@ export default {
     // keyOffset: self => self.octaveStart * 12,
     keyOffset: self => (self.octaveStart % 1) * 12,
     /* whiteKeysPos: self => [0, 0,  0, 12.5, 0, 29.5, 0, 46.57,  58.33, 0, 71, 0, 88].map(v => v / self.octavesVisibleInViewport), */
-    whiteKeysPos: self => [88, 0, 71, 0, 58.33, 46.57, 0, 29.5, 0, 12.5, 0, 0].map(v => v / self.octavesVisibleInViewport),
+    //                         0   1   2  3      4      5  6     7  8     9 10 11 
+    // whiteKeyPosesOrg: self => [88, 0, 71, 0, 58.33, 46.57, 0, 29.5, 0, 12.5, 0, 0],
+    //whiteKeysPos: self => self.whiteKeyPosesOrg.map(v => v / self.octavesVisibleInViewport),
+    keyHeights: self => [14.285, 0, 14.285, 0, 14.285, 14.285, 0, 14.285, 0, 14.285, 0, 14.285],
+    whitKeyPosOrg: self => {
+      let curPos = 0;
+      return self.keyHeights.map(v => {
+        curPos += v;
+        return curPos;
+      }).reverse();
+    },
   }
 }
 </script>
