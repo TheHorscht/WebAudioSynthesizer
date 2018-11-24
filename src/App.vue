@@ -103,8 +103,8 @@
                       @lowChanged="onScrollHorizontalLowChanged"
                       @highChanged="onScrollHorizontalHighChanged" />
       <zoom-scrollbar orientation="vertical"
-                      :min="4"
-                      :max="6"
+                      :min="3"
+                      :max="8"
                       :low="verticalLow"
                       :high="verticalHigh"
                       :reverse="true"

@@ -1,7 +1,8 @@
 <template>
   <!-- Grid -->
   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"
-       @pointerdown="onPointerDown">
+       @pointerdown.prevent="onPointerDown"
+       @contextmenu.prevent>
     <!-- Background -->
     <rect v-for="i in Math.ceil(numBarsVisibleInViewport * 4 + 1)" :key="'bgrect' + i"
           :x="(i-1) * noteWidth * 4 - (viewportStart % (1/4)) * noteWidth * 16"
@@ -9,12 +10,13 @@
           y="0" height="100%"
           :class="(i-1) % 2 === Math.floor((viewportStart % 0.5) * 4) ? 'bg1' : 'bg2'" />
     <!-- White/Black horizontal lines for black keys -->
-    <rect v-for="i in Math.ceil(numOctavesVisibleInViewport * 12) + 1" :key="'whiteBlackRect' + i"
+    <!-- TODO: This could be done better, was done lazily -->
+    <rect v-for="i in Math.ceil(numOctavesVisibleInViewport * 12) + 13" :key="'whiteBlackRect' + i"
           :x="0" width="100"
-          :y="100 - (i-0) * noteHeight + (octaveStart % (1/ 12)) * noteHeight * 12"
+          :y="100 - (i-1) * noteHeight + (octaveStart % 1) * noteHeight * 12"
           :height="noteHeight"
           class="blackKeyGrid"
-          v-if="[2, 4, 6, 9, 11].includes(Math.ceil((13-i) + 24 - octaveStart * 12)%12)" />
+          v-if="[2, 4, 7, 9, 11].includes((i-1)%12)" />
     <!-- Empty rects -->
     <line v-for="x in Math.ceil(numBarsVisibleInViewport * 16 + 1)" :key="`noteLineX${x}`"
           :x1="(x-1)*noteWidth - (viewportStart % (1 / 16)) * noteWidth * 16"
@@ -64,7 +66,7 @@
           :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
           stroke-width="0.1"
           class="note note-placed"
-          @mousedown="removeNote(note)" />
+          @pointerdown.stop.right="removeNote(note)" />
     <!-- Playhead -->
     <line v-if="playing"
           :x1="playheadPosition * 100" y1="0"
@@ -245,8 +247,11 @@ export default {
       const pixelsPerNote = this.height * (this.noteHeight / 100);
       const x = Math.floor((e.offsetX + this.viewportStart * pixelsPerBar) / pixelsPer16th);
       const y = Math.floor((this.octaveStart * pixelsPerOctave + (this.height - e.offsetY)) / pixelsPerNote);
-      this.placeNote(x, y);
-      // console.log(x, y);
+      // Left click    
+      if(e.button === 0) {
+        this.placeNote(x, y);
+        // Right click
+      }
     }
   },
   watch: {
