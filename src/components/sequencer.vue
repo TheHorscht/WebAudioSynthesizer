@@ -68,9 +68,9 @@
           :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
           stroke-width="0.1"
           :class="['note', 'note-placed', note.selected ? 'note-selected' : '']"
-          @pointerdown.stop="onNotePointerDown($event, note)"
-          @pointerup.stop="onNotePointerUp($event, note)"
-          @pointermove.stop="onNotePointerMove($event, note)"
+          @pointerdown.stop="onPointerDown($event, note)"
+          @pointerup.stop="onPointerUp($event, note)"
+          @pointermove.stop="onPointerMove($event, note)"
           @pointerdown.stop.right="removeNote(note)" />
     <!-- Selection rectangle -->
     <rect v-if="selecting"
@@ -282,23 +282,29 @@ export default {
     resume() {
       this.playing = true;
     },
-    onPointerDown(e) {
-      e.target.setPointerCapture(e.pointerId);
+    onPointerDown(e, note) {
+      // e.target.setPointerCapture(e.pointerId);
+      this.$el.setPointerCapture(e.pointerId);
       if(e.button === BUTTONS.LEFT_MOUSE) {
         if(e.ctrlKey) {
           const { xFine, yFine } = this.coordsToNote(e.offsetX, e.offsetY);
           this.selection = new SelectionRect(xFine, yFine);
           this.selecting = true;
-        } else {
+        } else if(!note) {
           const { x, y } = this.coordsToNote(e.offsetX, e.offsetY);
           const newNote = this.placeNote(x, y);
           this.notesInHand.push(newNote);
           this.deselectAllNotes();
+        } else {
+          this.notesInHand = [note];
+          this.notesInHand.push(...this.notes.filter(
+            n => n.selected === true && note !== n
+          ));;
         }
       }
     },
-    onPointerUp(e) {
-      e.target.releasePointerCapture(e.pointerId);
+    onPointerUp(e, note) {
+      this.$el.releasePointerCapture(e.pointerId);
       if(e.button === BUTTONS.LEFT_MOUSE) {
         const { x, y } = this.coordsToNote(e.offsetX, e.offsetY);
         this.notes.forEach(note => {
@@ -314,8 +320,8 @@ export default {
       }
       this.selecting = false;
     },
-    onPointerMove(e) {
-      if (e.target.hasPointerCapture(e.pointerId)) {
+    onPointerMove(e, note) {
+      if (this.$el.hasPointerCapture(e.pointerId)) {
         this.notesInHand.forEach(note => {
           note.fineX += e.movementX / (this.width / this.numBarsVisibleInViewport / 16);
           note.fineY -= e.movementY / (this.height / this.numOctavesVisibleInViewport / 12);
@@ -323,27 +329,11 @@ export default {
           note.y = Math.round(note.fineY);
           note.pitch = note.y;
         });
-        console.log("moving");
-        
         if(e.ctrlKey) {
           const { xFine, yFine } = this.coordsToNote(e.offsetX, e.offsetY);
           this.selection.end.x = xFine;
           this.selection.end.y = yFine;
         }
-      }
-    },
-    onNotePointerDown(e, note) {
-      console.log(e);
-      e.target.setPointerCapture(e.pointerId);
-      this.notesInHand = [note];
-    },
-    onNotePointerUp(e, note) {
-      console.log(e);
-      e.target.releasePointerCapture(e.pointerId);
-    },
-    onNotePointerMove(e, note) {
-      console.log(e);
-      if (e.target.hasPointerCapture(e.pointerId)) {
       }
     },
     deselectAllNotes() {
