@@ -2,6 +2,8 @@
   <!-- Grid -->
   <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"
        @pointerdown.prevent="onPointerDown"
+       @pointerup.prevent="onPointerUp"
+       @pointermove.prevent="onPointerMove"
        @contextmenu.prevent>
     <!-- Background -->
     <rect v-for="i in Math.ceil(numBarsVisibleInViewport * 4 + 1)" :key="'bgrect' + i"
@@ -60,13 +62,24 @@
             vector-effect="non-scaling-stroke" />
     </template>
     <!-- Placed notes -->
-    <rect v-for="note in notes" :key="`note${note.x}-${note.y}`"
+    <rect v-for="(note, i) in notes" :key="`note${note.x}-${note.y}-${i}`"
           :width="noteWidth" :height="noteHeight"
           :x="note.x * noteWidth - viewportStart * noteWidth * 16"
           :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
           stroke-width="0.1"
-          class="note note-placed"
+          :class="['note', 'note-placed', note.selected ? 'note-selected' : '']"
+          @pointerdown.stop="onNotePointerDown($event, note)"
+          @pointerup.stop="onNotePointerUp($event, note)"
+          @pointermove.stop="onNotePointerMove($event, note)"
           @pointerdown.stop.right="removeNote(note)" />
+    <!-- Selection rectangle -->
+    <rect v-if="selecting"
+          :x="((selection.left - viewportStart * 16) / 16 * 100) / numBarsVisibleInViewport"
+          :y="100 - ((selection.bottom - octaveStart * 12) / 12 * 100) / numOctavesVisibleInViewport"
+          :width="selection.width / 16 * 100 / numBarsVisibleInViewport"
+          :height="selection.height / 12 * 100 / numOctavesVisibleInViewport"
+          vector-effect="non-scaling-stroke"
+          class="selection-rectangle" />
     <!-- Playhead -->
     <line v-if="playing"
           :x1="playheadPosition * 100" y1="0"
@@ -76,6 +89,36 @@
 </template>
 <script>
 import '../browser-check.js'
+
+class SelectionRect {
+  constructor(x, y) {
+    this.start = { x, y };
+    this.end = { x, y };
+  }
+  get left() {
+    return Math.min(this.start.x, this.end.x);
+  }
+  get top() {
+    return Math.min(this.start.y, this.end.y);
+  }
+  get right() {
+    return Math.max(this.start.x, this.end.x);
+  }
+  get bottom() {
+    return Math.max(this.start.y, this.end.y);
+  }
+  get width() {
+    return this.right - this.left;
+  }
+  get height() {
+    return this.bottom - this.top;
+  }
+}
+window.sr = SelectionRect
+
+const BUTTONS = {
+  LEFT_MOUSE: 0,
+}
 
 const generateNoteId = (() => {
   let id = 0;
@@ -88,14 +131,6 @@ let sequenceStartTime = 0;
 export default {
   name: 'VueSequencer',
   props: {
-/*     width: {
-      type: Number,
-      default: 800,
-    }, */
-/*     height: {
-      type: Number,
-      default: 400,
-    }, */
     audioContext: {
       type: AudioContext,
       required: true,
@@ -131,17 +166,22 @@ export default {
     sequenceCurrentLoop: 0,
     playing: false,
     lookahead: 0.1, // In seconds
-    numBars: 4,
-/*     viewportStart: 0,
-    viewportEnd: 1, */
-    dbg_pos: 0,
+    notesInHand: [],
+    // selection: { top: 0, left: 0, bottom: 0, right: 0 },
+    selection: new SelectionRect(0, 0),
+    selecting: false,
+    width: 1,
+    height: 1,
   }),
   mounted() {
+    this.$nextTick(() => {
+      this.width = parseInt(window.getComputedStyle(this.$el).width, 10);
+      this.height = parseInt(window.getComputedStyle(this.$el).height, 10);
+    });
     this.update_();
   },
   methods: {
     update_() {
-      this.dbg_pos += 0.01;
       if(this.playing) {
         const upcomingEvents = this.getUpcomingEvents(this.sequencePosition, this.lookahead);
         upcomingEvents.on.forEach(note => {
@@ -172,13 +212,16 @@ export default {
     placeNote(x, y) {
       const posP = x / 16.0;
       const bonus = posP > this.playheadPosition ? 0 : 1;
-      this.notes.push({
+      const newNote = {
         id: generateNoteId(),
         pitch: y,
-        x, y,
+        x, y, fineX: x, fineY: y,
+        selected: false,
         onTriggerCount: this.sequenceCurrentLoop + bonus,
         offTriggerCount: this.sequenceCurrentLoop + bonus,
-      });
+      };
+      this.notes.push(newNote);
+      return newNote;
     },
     removeNote(note) {
       const index = this.notes.indexOf(note);
@@ -240,18 +283,82 @@ export default {
       this.playing = true;
     },
     onPointerDown(e) {
-      // placeNote
+      e.target.setPointerCapture(e.pointerId);
+      if(e.button === BUTTONS.LEFT_MOUSE) {
+        if(e.ctrlKey) {
+          const { xFine, yFine } = this.coordsToNote(e.offsetX, e.offsetY);
+          this.selection = new SelectionRect(xFine, yFine);
+          this.selecting = true;
+        } else {
+          const { x, y } = this.coordsToNote(e.offsetX, e.offsetY);
+          const newNote = this.placeNote(x, y);
+          this.notesInHand.push(newNote);
+          this.deselectAllNotes();
+        }
+      }
+    },
+    onPointerUp(e) {
+      e.target.releasePointerCapture(e.pointerId);
+      if(e.button === BUTTONS.LEFT_MOUSE) {
+        const { x, y } = this.coordsToNote(e.offsetX, e.offsetY);
+        this.notes.forEach(note => {
+          if(this.selecting && 
+             !(note.fineX < this.selection.left
+            || note.fineX > this.selection.right
+            || note.fineY < this.selection.top
+            || note.fineY > this.selection.bottom)) {
+              note.selected = true;
+          }
+        });
+        this.notesInHand = [];
+      }
+      this.selecting = false;
+    },
+    onPointerMove(e) {
+      if (e.target.hasPointerCapture(e.pointerId)) {
+        this.notesInHand.forEach(note => {
+          note.fineX += e.movementX / (this.width / this.numBarsVisibleInViewport / 16);
+          note.fineY -= e.movementY / (this.height / this.numOctavesVisibleInViewport / 12);
+          note.x = Math.round(note.fineX);
+          note.y = Math.round(note.fineY);
+          note.pitch = note.y;
+        });
+        console.log("moving");
+        
+        if(e.ctrlKey) {
+          const { xFine, yFine } = this.coordsToNote(e.offsetX, e.offsetY);
+          this.selection.end.x = xFine;
+          this.selection.end.y = yFine;
+        }
+      }
+    },
+    onNotePointerDown(e, note) {
+      console.log(e);
+      e.target.setPointerCapture(e.pointerId);
+      this.notesInHand = [note];
+    },
+    onNotePointerUp(e, note) {
+      console.log(e);
+      e.target.releasePointerCapture(e.pointerId);
+    },
+    onNotePointerMove(e, note) {
+      console.log(e);
+      if (e.target.hasPointerCapture(e.pointerId)) {
+      }
+    },
+    deselectAllNotes() {
+      this.notes.forEach(note => note.selected = false);
+    },
+    coordsToNote(x, y) {
       const pixelsPerBar = this.width / this.numBarsVisibleInViewport;
       const pixelsPerOctave = this.height / this.numOctavesVisibleInViewport;
       const pixelsPer16th = pixelsPerBar / 16;
       const pixelsPerNote = this.height * (this.noteHeight / 100);
-      const x = Math.floor((e.offsetX + this.viewportStart * pixelsPerBar) / pixelsPer16th);
-      const y = Math.floor((this.octaveStart * pixelsPerOctave + (this.height - e.offsetY)) / pixelsPerNote);
-      // Left click    
-      if(e.button === 0) {
-        this.placeNote(x, y);
-        // Right click
-      }
+      const xFineOut = (x + this.viewportStart * pixelsPerBar) / pixelsPer16th;
+      const yFineOut = (this.octaveStart * pixelsPerOctave + (this.height - y)) / pixelsPerNote;
+      const xOut = Math.floor(xFineOut);
+      const yOut = Math.floor(yFineOut);
+      return { x: xOut, y: yOut, xFine: xFineOut, yFine: yFineOut, };
     }
   },
   watch: {
@@ -274,10 +381,6 @@ export default {
 
     noteWidth: self => 100 / (self.numBarsVisibleInViewport * 16),
     noteHeight: self => 100 / (self.numOctavesVisibleInViewport * 12),
-
-    cycle: self => Math.cos(self.dbg_pos) * 0.5 + 0.5, // 0 - 1
-    width: self => parseInt(window.getComputedStyle(self.$el).width, 10),
-    height: self => parseInt(window.getComputedStyle(self.$el).height, 10),
   },
 }
 </script>
@@ -297,6 +400,9 @@ svg {
 }
 .note-placed {
   fill: #29365a;
+}
+.note-selected {
+  fill: #304fa5;
 }
 
 .note-line {
@@ -336,5 +442,11 @@ svg {
 .octave-text {
   // font-size: 3px;
   fill: yellow;
+}
+
+.selection-rectangle {
+  fill: none;
+  stroke: yellow;
+  stroke-width: 1;
 }
 </style>
