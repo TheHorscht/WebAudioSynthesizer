@@ -88,6 +88,7 @@
   </svg>
 </template>
 <script>
+import '../key-events.js'
 import '../browser-check.js'
 
 class SelectionRect {
@@ -177,6 +178,9 @@ export default {
     this.$nextTick(() => {
       this.width = parseInt(window.getComputedStyle(this.$el).width, 10);
       this.height = parseInt(window.getComputedStyle(this.$el).height, 10);
+    });
+    window.addEventListener('key-event-down-norepeat', e => {
+      this.onKeyDown(e.detail);
     });
     this.update_();
   },
@@ -283,7 +287,6 @@ export default {
       this.playing = true;
     },
     onPointerDown(e, note) {
-      // e.target.setPointerCapture(e.pointerId);
       this.$el.setPointerCapture(e.pointerId);
       if(e.button === BUTTONS.LEFT_MOUSE) {
         if(e.ctrlKey) {
@@ -299,7 +302,7 @@ export default {
           this.notesInHand = [note];
           this.notesInHand.push(...this.notes.filter(
             n => n.selected === true && note !== n
-          ));;
+          ));
         }
       }
     },
@@ -334,6 +337,12 @@ export default {
           this.selection.end.x = xFine;
           this.selection.end.y = yFine;
         }
+      }
+    },
+    onKeyDown(e) {
+      // console.log(e);
+      if(e.code === 'Delete') {
+        this.notes = this.notes.filter(note => !note.selected);
       }
     },
     deselectAllNotes() {
