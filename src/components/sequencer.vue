@@ -62,16 +62,25 @@
             vector-effect="non-scaling-stroke" />
     </template>
     <!-- Placed notes -->
-    <rect v-for="(note, i) in notes" :key="`note${note.x}-${note.y}-${i}`"
-          :width="noteWidth" :height="noteHeight"
-          :x="note.x * noteWidth - viewportStart * noteWidth * 16"
-          :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
-          stroke-width="0.1"
-          :class="['note', 'note-placed', note.selected ? 'note-selected' : '']"
-          @pointerdown.stop="onPointerDown($event, note)"
-          @pointerup.stop="onPointerUp($event, note)"
-          @pointermove.stop="onPointerMove($event, note)"
-          @pointerdown.stop.right="removeNote(note)" />
+    <g v-for="(note, i) in notes" :key="`note-${i}`">
+      <rect :width="barWidth * note.duration" :height="noteHeight"
+            :x="note.x * noteWidth - viewportStart * noteWidth * 16"
+            :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
+            stroke-width="0.1"
+            :class="['note', 'note-placed', note.selected ? 'note-selected' : '']"
+            @pointerdown.stop="onPointerDown($event, note)"
+            @pointerup.stop="onPointerUp($event, note)"
+            @pointermove.stop="onPointerMove($event, note)"
+            @pointerdown.stop.right="removeNote(note)" />
+      <!-- Resize handle -->
+      <rect :width="1" :height="noteHeight"
+            :x="note.x * noteWidth - viewportStart * noteWidth * 16 + barWidth * note.duration - 0.5"
+            :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
+            class="note-resize-handle"
+            @pointerdown.stop="onResizeNoteStart($event, note)"
+            @pointerup.stop="onResizeNoteEnd($event, note)"
+            @pointermove.stop="onResizeNote($event, note)" />
+    </g>
     <!-- Selection rectangle -->
     <rect v-if="selecting"
           :x="((selection.left - viewportStart * 16) / 16 * 100) / numBarsVisibleInViewport"
@@ -196,7 +205,7 @@ export default {
           this.$emit('noteOn', { note, whenTime: noteOnTime });
         });
         upcomingEvents.off.forEach(note => {
-          const noteEndOffset = note.x * this.secondsPerSixteenthNote + this.secondsPerSixteenthNote;
+          const noteEndOffset = note.x * this.secondsPerSixteenthNote + this.secondsPerSixteenthNote * 16 * note.duration;
           let noteOffTime = noteEndOffset + this.sequenceLength * note.offTriggerCount;
           noteOffTime += sequenceStartTime;
           note.offTriggerCount++;
@@ -220,6 +229,7 @@ export default {
         id: generateNoteId(),
         pitch: y,
         x, y, fineX: x, fineY: y,
+        duration: 1 / 16, // In bars
         selected: false,
         onTriggerCount: this.sequenceCurrentLoop + bonus,
         offTriggerCount: this.sequenceCurrentLoop + bonus,
@@ -340,7 +350,6 @@ export default {
       }
     },
     onKeyDown(e) {
-      // console.log(e);
       (({
         'Delete': () => {
           this.notes = this.notes.filter(note => !note.selected);
@@ -351,6 +360,18 @@ export default {
           }
         },
       })[e.code] || (() => null))();
+    },
+    onResizeNoteStart(e, note) {
+      e.target.setPointerCapture(e.pointerId);
+    },
+    onResizeNoteEnd(e, note) {
+      e.target.releasePointerCapture(e.pointerId);
+    },
+    onResizeNote(e, note) {
+      if (e.target.hasPointerCapture(e.pointerId)) {
+        const moveX = e.movementX / (this.width / this.numBarsVisibleInViewport);
+        note.duration = Math.max(1 / 64, note.duration + moveX);
+      }
     },
     deselectAllNotes() {
       this.notes.forEach(note => note.selected = false);
@@ -385,6 +406,7 @@ export default {
     numOctavesVisibleInViewport: self => self.octaveEnd - self.octaveStart,
     numBarsVisibleInViewport: self => self.viewportEnd - self.viewportStart,
 
+    barWidth: self => 100 / self.numBarsVisibleInViewport,
     noteWidth: self => 100 / (self.numBarsVisibleInViewport * 16),
     noteHeight: self => 100 / (self.numOctavesVisibleInViewport * 12),
   },
@@ -402,13 +424,18 @@ svg {
   bottom: 0;
 }
 .note {
-  stroke: #3c3434;
+  stroke: #41495f;
 }
 .note-placed {
   fill: #29365a;
 }
 .note-selected {
   fill: #304fa5;
+}
+.note-resize-handle {
+  cursor: ew-resize;
+  fill: transparent;
+  stroke: none;
 }
 
 .note-line {
