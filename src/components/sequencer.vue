@@ -338,7 +338,7 @@ export default {
         this.notesInHand.forEach(note => {
           note.fineX += e.movementX / (this.width / this.numBarsVisibleInViewport / 16);
           note.fineY -= e.movementY / (this.height / this.numOctavesVisibleInViewport / 12);
-          note.x = Math.round(note.fineX);
+          note.x = Math.max(0, Math.round(note.fineX));
           note.y = Math.round(note.fineY);
           note.pitch = note.y;
         });
