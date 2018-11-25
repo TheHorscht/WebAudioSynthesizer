@@ -341,9 +341,16 @@ export default {
     },
     onKeyDown(e) {
       // console.log(e);
-      if(e.code === 'Delete') {
-        this.notes = this.notes.filter(note => !note.selected);
-      }
+      (({
+        'Delete': () => {
+          this.notes = this.notes.filter(note => !note.selected);
+        },
+        'KeyA': () => {
+          if(e.ctrlKey) {
+            this.notes.forEach(note => note.selected = true);
+          }
+        },
+      })[e.code] || (() => null))();
     },
     deselectAllNotes() {
       this.notes.forEach(note => note.selected = false);
