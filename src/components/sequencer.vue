@@ -182,6 +182,7 @@ export default {
     selecting: false,
     width: 1,
     height: 1,
+    previewNote: null,
   }),
   mounted() {
     this.$nextTick(() => {
@@ -307,12 +308,18 @@ export default {
           const { x, y } = this.coordsToNote(e.offsetX, e.offsetY);
           const newNote = this.placeNote(x, y);
           this.notesInHand.push(newNote);
+          if(this.notesInHand.length === 1) {
+            this.emitPreviewOn(newNote.pitch);
+          }
           this.deselectAllNotes();
         } else {
           this.notesInHand = [note];
           this.notesInHand.push(...this.notes.filter(
             n => n.selected === true && note !== n
           ));
+          if(this.notesInHand.length === 1) {
+            this.emitPreviewOn(note.pitch);
+          }
         }
       }
     },
@@ -334,6 +341,9 @@ export default {
           note.fineY = note.y;
         });
         this.notesInHand = [];
+        if(this.previewNote) {
+          this.emitPreviewOff();
+        }
       }
       this.selecting = false;
     },
@@ -343,8 +353,15 @@ export default {
           note.fineX += e.movementX / (this.width / this.numBarsVisibleInViewport / 16);
           note.fineY -= e.movementY / (this.height / this.numOctavesVisibleInViewport / 12);
           note.x = Math.max(0, Math.round(note.fineX));
+          const oldPitch = note.y;
           note.y = Math.round(note.fineY);
           note.pitch = note.y;
+          if(this.notesInHand.length === 1 && note.pitch !== oldPitch) {
+            if(this.previewNote) {
+              this.emitPreviewOff();
+            }
+            this.emitPreviewOn(note.pitch);
+          }
         });
         if(e.ctrlKey) {
           const { xFine, yFine } = this.coordsToNote(e.offsetX, e.offsetY);
@@ -352,6 +369,13 @@ export default {
           this.selection.end.y = yFine;
         }
       }
+    },
+    emitPreviewOn(pitch) {
+      this.previewNote = { id: 'preview', pitch };
+      this.$emit('noteOn', { note: this.previewNote, whenTime: this.audioContext.currentTime });
+    },
+    emitPreviewOff() {
+      this.$emit('noteOff', { note: this.previewNote, whenTime: this.audioContext.currentTime });
     },
     onKeyDown(e) {
       (({
