@@ -381,7 +381,15 @@ export default {
           this.selection.end.x = xFine;
           this.selection.end.y = yFine;
         }
+        if(e.buttons === BUTTONS.RIGHT_MOUSE) {
+          const { x, y } = this.coordsToNote(e.offsetX, e.offsetY);
+          const noteUnderCursor = this.notes.find(note => note.x === x && note.y === y);
+          if(noteUnderCursor) {
+            this.removeNote(noteUnderCursor);
+          }
+        }
       }
+      //console.log((e.buttons & BUTTONS.RIGHT_MOUSE) > 0)
     },
     emitPreviewOn(pitch) {
       this.emitPreviewOff();
