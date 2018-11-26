@@ -77,8 +77,8 @@
             :x="note.x * noteWidth - viewportStart * noteWidth * 16 + barWidth * note.duration - 1"
             :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
             class="note-resize-handle"
-            @pointerdown.stop="onResizeNoteStart($event, note)"
-            @pointerup.stop="onResizeNoteEnd($event, note)"
+            @pointerdown.left.stop="onResizeNoteStart($event, note)"
+            @pointerup.left.stop="onResizeNoteEnd($event, note)"
             @pointermove.stop="onResizeNote($event, note)" />
     </g>
     <!-- Selection rectangle -->
@@ -128,6 +128,7 @@ window.sr = SelectionRect
 
 const BUTTONS = {
   LEFT_MOUSE: 0,
+  RIGHT_MOUSE: 2,
 }
 
 const generateNoteId = (() => {
@@ -304,6 +305,21 @@ export default {
           const { xFine, yFine } = this.coordsToNote(e.offsetX, e.offsetY);
           this.selection = new SelectionRect(xFine, yFine);
           this.selecting = true;
+        } else if(e.shiftKey) {
+          // Pointer down + shift = duplicate selected notes,
+          // deselect current notes, select new notes and
+          // place them in hand for moving around
+          const selectedNotes = this.notes.filter(note => note.selected);
+          this.notesInHand = [];
+          selectedNotes.forEach(selectedNote => {
+            const newNote = {
+              ...selectedNote,
+              id: generateNoteId(),
+            };
+            this.notes.push(newNote);
+            this.notesInHand.push(newNote);
+            selectedNote.selected = false;
+          });
         } else if(!note) {
           const { x, y } = this.coordsToNote(e.offsetX, e.offsetY);
           const newNote = this.placeNote(x, y);
@@ -321,6 +337,8 @@ export default {
             this.emitPreviewOn(note.pitch);
           }
         }
+      } else if(e.button === BUTTONS.RIGHT_MOUSE) {
+        this.notes.forEach(note => note.selected = false);
       }
     },
     onPointerUp(e, note) {
