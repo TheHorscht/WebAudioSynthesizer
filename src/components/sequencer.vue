@@ -341,9 +341,7 @@ export default {
           note.fineY = note.y;
         });
         this.notesInHand = [];
-        if(this.previewNote) {
-          this.emitPreviewOff();
-        }
+        this.emitPreviewOff();
       }
       this.selecting = false;
     },
@@ -357,9 +355,6 @@ export default {
           note.y = Math.round(note.fineY);
           note.pitch = note.y;
           if(this.notesInHand.length === 1 && note.pitch !== oldPitch) {
-            if(this.previewNote) {
-              this.emitPreviewOff();
-            }
             this.emitPreviewOn(note.pitch);
           }
         });
@@ -371,11 +366,14 @@ export default {
       }
     },
     emitPreviewOn(pitch) {
+      this.emitPreviewOff();
       this.previewNote = { id: 'preview', pitch };
       this.$emit('noteOn', { note: this.previewNote, whenTime: this.audioContext.currentTime });
     },
     emitPreviewOff() {
-      this.$emit('noteOff', { note: this.previewNote, whenTime: this.audioContext.currentTime });
+      if(this.previewNote) {
+        this.$emit('noteOff', { note: this.previewNote, whenTime: this.audioContext.currentTime });
+      }
     },
     onKeyDown(e) {
       (({

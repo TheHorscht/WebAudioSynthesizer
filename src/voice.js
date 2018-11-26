@@ -117,16 +117,18 @@ export default class Voice extends Observable {
     /* this.gainNode.gain.setValueAtTime(Voice.volume, whenTime);
     this.gainNode.gain.exponentialRampToValueAtTime(0.00001, whenTime + 3); */
     for(let i = 0; i < this.osc1Nodes.length; i++) {
-      this.osc1Nodes[i].stop(whenTime + 3);
+      this.osc1Nodes[i].stop(whenTime + Voice.volumeRelease);
     }
     for(let i = 0; i < this.osc2Nodes.length; i++) {
-      this.osc2Nodes[i].stop(whenTime + 3);
+      this.osc2Nodes[i].stop(whenTime + Voice.volumeRelease);
     }
+    // console.log("Stopping in: " + parseFloat(whenTime - this.audioCtx.currentTime));
+    
     window.setTimeout(() => {
       this.gainNode.disconnect();
       this.biquadFilter.disconnect();
       this.dispatchEvent('voiceDonePlaying');
-    }, 3000);
+    }, ((whenTime + Voice.volumeRelease) - this.audioCtx.currentTime) * 1000);
   }
 }
 

@@ -281,7 +281,10 @@ export default {
       })
       keyboardTimeouts = [];
       Object.values(voices).forEach(voiceArray => {
-        voiceArray.forEach(voice => voice.noteOff());
+        voiceArray.forEach(voice => {
+          voice.noteOff();
+          console.log("Stopping voices for");
+        });
         voiceArray.length = 0;
       });
     },
@@ -292,15 +295,20 @@ export default {
       } else {
         voices[id] = [voice];
       }
+      console.log(voices)
       voice.noteOn(pitch, whenTime);
       voice.addEventListener('voiceDonePlaying', () => {
-        // voices[id].pop();
+        voices[id] = voices[id].filter(v => v !== voice);
       });
     },
     noteOff(id, pitch, whenTime) {
       if(id in voices && voices[id].length > 0) {
-        let voice = voices[id].pop();
+        // let voice = voices[id].pop();
+        let voice = voices[id][voices[id].length - 1];
         voice.noteOff(whenTime);
+        
+        // voices[id].forEach(v => v.noteOff(whenTime));
+        //voice.noteOff(whenTime);
       }
     },
     togglePlaying() {
