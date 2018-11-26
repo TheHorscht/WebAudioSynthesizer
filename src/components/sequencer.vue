@@ -329,6 +329,10 @@ export default {
               note.selected = true;
           }
         });
+        this.notesInHand.forEach(note => {
+          note.fineX = note.x;
+          note.fineY = note.y;
+        });
         this.notesInHand = [];
       }
       this.selecting = false;
@@ -370,7 +374,13 @@ export default {
     onResizeNote(e, note) {
       if (e.target.hasPointerCapture(e.pointerId)) {
         const moveX = e.movementX / (this.width / this.numBarsVisibleInViewport);
-        note.duration = Math.max(1 / 64, note.duration + moveX);
+        const selectedNotes = this.notes.filter(note => note.selected);
+        if(!selectedNotes.includes(note)) {
+          selectedNotes.push(note);
+        }
+        selectedNotes.forEach(note => {
+          note.duration = Math.max(1 / 64, note.duration + moveX);
+        });
       }
     },
     deselectAllNotes() {
