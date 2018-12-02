@@ -303,8 +303,8 @@ export default {
       this.playing = true;
     },
     onPointerDown(e, note) {
-      this.$el.setPointerCapture(e.pointerId);
       if(e.button === BUTTONS.LEFT_MOUSE) {
+        this.$el.setPointerCapture(e.pointerId);
         if(e.ctrlKey) {
           const { xFine, yFine } = this.coordsToNote(e.offsetX, e.offsetY);
           this.selection = new SelectionRect(xFine, yFine);
@@ -385,15 +385,11 @@ export default {
           this.selection.end.x = xFine;
           this.selection.end.y = yFine;
         }
-        if(e.buttons === BUTTONS.RIGHT_MOUSE) {
-          const { x, y } = this.coordsToNote(e.offsetX, e.offsetY);
-          const noteUnderCursor = this.notes.find(note => note.x === x && note.y === y);
-          if(noteUnderCursor) {
-            this.removeNote(noteUnderCursor);
-          }
-        }
       }
       //console.log((e.buttons & BUTTONS.RIGHT_MOUSE) > 0)
+      if((e.buttons & BUTTONS.RIGHT_MOUSE) > 0 && note) {
+        this.removeNote(note);
+      }
     },
     emitPreviewOn(pitch) {
       this.emitPreviewOff();
