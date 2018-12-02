@@ -72,7 +72,7 @@
             :class="['note', 'note-placed', note.selected ? 'note-selected' : '']"
             @pointerdown.stop="onPointerDown($event, note)"
             @pointerup.stop="onPointerUp($event, note)"
-            @pointermove.stop="onPointerMove($event, note)"
+            @pointermove.capture="onPointerMove($event, note)"
             @pointerdown.stop.right="removeNote(note)" />
       <!-- Note resize handle -->
       <rect :width="1.5" :height="noteHeight"
@@ -186,6 +186,9 @@ export default {
     width: 1,
     height: 1,
     previewNote: null,
+    lastTouchedNote: {
+      duration: 1 / 16 // In bars
+    }
   }),
   mounted() {
     this.$nextTick(() => {
@@ -235,7 +238,7 @@ export default {
         id: generateNoteId(),
         pitch: y,
         x, y, fineX: x, fineY: y,
-        duration: 1 / 16, // In bars
+        duration: this.lastTouchedNote.duration, // In bars
         selected: false,
         onTriggerCount: this.sequenceCurrentLoop + bonus,
         offTriggerCount: this.sequenceCurrentLoop + bonus,
@@ -340,6 +343,9 @@ export default {
           if(this.notesInHand.length === 1) {
             this.emitPreviewOn(note.pitch);
           }
+        }
+        if(note) {
+          this.lastTouchedNote.duration = note.duration;
         }
       } else if(e.button === BUTTONS.RIGHT_MOUSE) {
         this.notes.forEach(note => note.selected = false);
