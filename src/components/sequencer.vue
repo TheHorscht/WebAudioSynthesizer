@@ -75,8 +75,8 @@
             @pointermove.capture="onPointerMove($event, note)"
             @pointerdown.stop.right="removeNote(note)" />
       <!-- Note resize handle -->
-      <rect :width="1.5" :height="noteHeight"
-            :x="note.x * noteWidth - viewportStart * noteWidth * 16 + barWidth * note.duration - 1"
+      <rect :width="1" :height="noteHeight"
+            :x="note.x * noteWidth - viewportStart * noteWidth * 16 + barWidth * note.duration - 0.75"
             :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
             class="note-resize-handle"
             @pointerdown.left.stop="onResizeNoteStart($event, note)"
