@@ -67,13 +67,15 @@
             :x="note.x * noteWidth - viewportStart * noteWidth * 16"
             :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
             stroke-width="0.1"
+            rx="0.25"
+            ry="1"
             :class="['note', 'note-placed', note.selected ? 'note-selected' : '']"
             @pointerdown.stop="onPointerDown($event, note)"
             @pointerup.stop="onPointerUp($event, note)"
             @pointermove.stop="onPointerMove($event, note)"
             @pointerdown.stop.right="removeNote(note)" />
-      <!-- Resize handle -->
-      <rect :width="2" :height="noteHeight"
+      <!-- Note resize handle -->
+      <rect :width="1.5" :height="noteHeight"
             :x="note.x * noteWidth - viewportStart * noteWidth * 16 + barWidth * note.duration - 1"
             :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
             class="note-resize-handle"
@@ -91,8 +93,8 @@
           class="selection-rectangle" />
     <!-- Playhead -->
     <line v-if="playing"
-          :x1="playheadPosition * 100" y1="0"
-          :x2="playheadPosition * 100" y2="100%"
+          :x1="(sequencePosition / sequenceLength - viewportStart / totalBars) / numBarsVisibleInViewport * totalBars * 100" y1="0"
+          :x2="(sequencePosition / sequenceLength - viewportStart / totalBars) / numBarsVisibleInViewport * totalBars * 100" y2="100"
           stroke-width="0.2" stroke="yellow" />
   </svg>
 </template>
@@ -459,7 +461,9 @@ export default {
   computed: {
     playheadPosition: self => self.sequencePosition / self.sequenceLength,
     secondsPerSixteenthNote: self => 60 / self.bpm / 4,
-    sequenceLength: self => self.secondsPerSixteenthNote * 16,
+    secondsPerBar: self => self.secondsPerSixteenthNote * 16,
+    sequenceLength: self => self.secondsPerBar * self.totalBars,
+    totalBars: self => 4,
 
     numOctavesVisibleInViewport: self => self.octaveEnd - self.octaveStart,
     numBarsVisibleInViewport: self => self.viewportEnd - self.viewportStart,
@@ -486,6 +490,7 @@ svg {
 }
 .note-placed {
   fill: #29365a;
+  stroke: #0f1936;
 }
 .note-selected {
   fill: #304fa5;

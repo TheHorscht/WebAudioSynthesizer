@@ -97,13 +97,13 @@
                     :octaveEnd="verticalHigh" />
       <zoom-scrollbar orientation="horizontal"
                       :min="0"
-                      :max="2"
+                      :max="4"
                       :low="horizontalLow"
                       :high="horizontalHigh"
                       @lowChanged="onScrollHorizontalLowChanged"
                       @highChanged="onScrollHorizontalHighChanged" />
       <zoom-scrollbar orientation="vertical"
-                      :min="3"
+                      :min="2"
                       :max="8"
                       :low="verticalLow"
                       :high="verticalHigh"
