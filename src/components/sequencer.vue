@@ -93,8 +93,8 @@
           class="selection-rectangle" />
     <!-- Playhead -->
     <line v-if="playing"
-          :x1="(sequencePosition / sequenceLength - viewportStart / totalBars) / numBarsVisibleInViewport * totalBars * 100" y1="0"
-          :x2="(sequencePosition / sequenceLength - viewportStart / totalBars) / numBarsVisibleInViewport * totalBars * 100" y2="100"
+          :x1="playheadPosition * 100" y1="0"
+          :x2="playheadPosition * 100" y2="100"
           stroke-width="0.2" stroke="yellow" />
   </svg>
 </template>
@@ -227,8 +227,10 @@ export default {
       window.requestAnimationFrame(this.update_);
     },
     placeNote(x, y) {
-      const posP = x / 16.0;
-      const bonus = posP > this.playheadPosition ? 0 : 1;
+      /* If the note is placed while the sequencer is playing, add 1
+         if the note is placed behind the playhead,
+         to signal "note has already triggered this playthrough". */ 
+      const bonus = x * this.secondsPerSixteenthNote > this.sequencePosition ? 0 : 1;
       const newNote = {
         id: generateNoteId(),
         pitch: y,
@@ -459,7 +461,7 @@ export default {
     }
   },
   computed: {
-    playheadPosition: self => self.sequencePosition / self.sequenceLength,
+    playheadPosition: self => (self.sequencePosition / self.sequenceLength - self.viewportStart / self.totalBars) / self.numBarsVisibleInViewport * self.totalBars,
     secondsPerSixteenthNote: self => 60 / self.bpm / 4,
     secondsPerBar: self => self.secondsPerSixteenthNote * 16,
     sequenceLength: self => self.secondsPerBar * self.totalBars,
