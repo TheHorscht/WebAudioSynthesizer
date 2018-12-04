@@ -120,6 +120,9 @@
                     :octaveEnd="verticalHigh" />
     </div>
     <input type="button" value="Play/Pause" @click="togglePlaying">
+    <input type="button" value="Export" @click="exportNotes">
+    <input type="button" value="Import" @click="importNotes">
+
   </div>
 </template>
 
@@ -131,6 +134,12 @@ import vueSequencer from './components/sequencer'
 import zoomScrollbar from './components/zoom-scrollbar'
 import sliderConfig from './slider-config'
 import Voice, { SHAPES } from './voice'
+import { saveJSONtoFile } from './file-export.js'
+import { importJSONfromFile } from './file-import.js'
+
+
+
+
 
 const voices = {};
 const generateNewId = (() => {
@@ -139,7 +148,6 @@ const generateNewId = (() => {
 })();
 
 let keyboardTimeouts = [];
-
 window.voices = voices;
 
 export default {
@@ -312,7 +320,16 @@ export default {
       } else {
         this.$refs.sequencer.play();
       } 
-    }
+    },
+    exportNotes() {
+      const exportedNotes = this.$refs.sequencer.exportNotes();
+      saveJSONtoFile(exportedNotes, 'mySong');
+    },
+    importNotes() {
+      importJSONfromFile().then(json => {
+        this.$refs.sequencer.importNotes(json);
+      });
+    },
   },
   computed: {
     osc1active: self => self.oscillators[0].active,

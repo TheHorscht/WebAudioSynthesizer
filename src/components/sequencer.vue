@@ -450,6 +450,17 @@ export default {
       const xOut = Math.floor(xFineOut);
       const yOut = Math.floor(yFineOut);
       return { x: xOut, y: yOut, xFine: xFineOut, yFine: yFineOut, };
+    },
+    exportNotes() {
+      return this.notes.map(note => ({
+        x: note.x,
+        y: note.y,
+      }));
+    },
+    importNotes(importedNotes) {
+      importedNotes.forEach(note => {
+        this.placeNote(note.x, note.y);
+      });
     }
   },
   watch: {
