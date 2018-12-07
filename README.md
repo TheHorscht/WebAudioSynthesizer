@@ -6,9 +6,10 @@ A small toy synthesizer for the web. Including a sequencer! Make some noise and 
 - [ ] Better UI
 - [ ] Refactor
 - [ ] Fix sound bugs (loud noises etc)
-- [ ] Make BPM slider behave better
+- [x] Make BPM slider behave better
 - [ ] Import/Export synth settings
 - [ ] A way to change number of bars
+- [ ] Make (some) parameters affect sound immediately (main volume etc)
 
 ## TODO/Ideas for future versions:
 - [ ] LFOs
