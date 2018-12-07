@@ -67,8 +67,6 @@
             :x="note.x * noteWidth - viewportStart * noteWidth * 16"
             :y="100 - (note.y+1) * noteHeight + octaveStart * noteHeight * 12"
             stroke-width="0.1"
-            rx="0.25"
-            ry="1"
             :class="['note', 'note-placed', note.selected ? 'note-selected' : '']"
             @pointerdown.stop="onPointerDown($event, note)"
             @pointerup.stop="onPointerUp($event, note)"
