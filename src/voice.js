@@ -44,12 +44,12 @@ export default class Voice extends Observable {
     this.osc2gainNode = audioCtx.createGain();
 
     
-    this.osc1volumeADSR = new ADSR(Voice.osc1volume, audioCtx);
+    this.osc1volumeADSR = new ADSR(Voice.osc1volume / Voice.osc1voices, audioCtx);
     this.osc1volumeADSR.attack = Voice.volumeAttack;
     this.osc1volumeADSR.decay = Voice.volumeDecay;
     this.osc1volumeADSR.sustain = Voice.volumeSustain;
     this.osc1volumeADSR.release = Voice.volumeRelease;
-    this.osc2volumeADSR = new ADSR(Voice.osc2volume, audioCtx);
+    this.osc2volumeADSR = new ADSR(Voice.osc2volume / Voice.osc2voices, audioCtx);
     this.osc2volumeADSR.attack = Voice.volumeAttack;
     this.osc2volumeADSR.decay = Voice.volumeDecay;
     this.osc2volumeADSR.sustain = Voice.volumeSustain;
