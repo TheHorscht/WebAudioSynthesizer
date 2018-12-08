@@ -19,7 +19,7 @@
       <label>
         Voices
         <select v-model="osc.voices">
-          <option v-for="voiceCount in 4"
+          <option v-for="voiceCount in 8"
                   :key="'voiceSelect'+voiceCount"
                   :value="voiceCount">
             {{ voiceCount }}
