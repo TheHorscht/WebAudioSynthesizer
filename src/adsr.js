@@ -18,7 +18,7 @@ export default class ADSR {
     this.constantSource.start(whenTime)
   }
   noteOff(whenTime) {
-    this.constantSource.offset.cancelAndHoldAtTime(whenTime + 0.0001);
+    this.constantSource.offset.cancelScheduledValues(whenTime);
     this.constantSource.offset.setTargetAtTime(0, whenTime, this.tension * this.release);
     // Would it be good to stop? If so, figure out how long transition takes and fill in value
     // this.constantSource.stop(whenTime + this.release);
