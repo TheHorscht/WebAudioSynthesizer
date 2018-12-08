@@ -40,12 +40,20 @@ export default class Voice extends Observable {
     }
 
     this.biquadFilter = audioCtx.createBiquadFilter();
-    this.gainNode = audioCtx.createGain();
-    this.volumeADSR = new ADSR(Voice.volume, audioCtx);
-    this.volumeADSR.attack = Voice.volumeAttack;
-    this.volumeADSR.decay = Voice.volumeDecay;
-    this.volumeADSR.sustain = Voice.volumeSustain;
-    this.volumeADSR.release = Voice.volumeRelease;
+    this.osc1gainNode = audioCtx.createGain();
+    this.osc2gainNode = audioCtx.createGain();
+
+    
+    this.osc1volumeADSR = new ADSR(Voice.osc1volume, audioCtx);
+    this.osc1volumeADSR.attack = Voice.volumeAttack;
+    this.osc1volumeADSR.decay = Voice.volumeDecay;
+    this.osc1volumeADSR.sustain = Voice.volumeSustain;
+    this.osc1volumeADSR.release = Voice.volumeRelease;
+    this.osc2volumeADSR = new ADSR(Voice.osc2volume, audioCtx);
+    this.osc2volumeADSR.attack = Voice.volumeAttack;
+    this.osc2volumeADSR.decay = Voice.volumeDecay;
+    this.osc2volumeADSR.sustain = Voice.volumeSustain;
+    this.osc2volumeADSR.release = Voice.volumeRelease;
 
     this.filterADSR = new ADSR((22000 - Voice.filterCutoff) * Voice.filterEnvelopeAmount, audioCtx);
     this.filterADSR.attack = Voice.filterAttack;
@@ -56,23 +64,26 @@ export default class Voice extends Observable {
     this.biquadFilter.type = 'lowpass';
     this.biquadFilter.Q.setValueAtTime(Voice.filterResonance, audioCtx.currentTime);
     
-    this.gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    this.osc1gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+    this.osc2gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
 
-    this.volumeADSR.connect(this.gainNode.gain);
+    this.osc1volumeADSR.connect(this.osc1gainNode.gain);
+    this.osc2volumeADSR.connect(this.osc2gainNode.gain);
     this.filterADSR.connect(this.biquadFilter.frequency);
     this.filterADSR.tension = 0.5
     
     this.osc1Nodes.forEach(node => {
-      node.connect(this.biquadFilter)
-          .connect(this.gainNode)
-          .connect(this.audioCtx.destination);
+      node.connect(this.osc1gainNode)
+          .connect(this.biquadFilter);
     });
     
     this.osc2Nodes.forEach(node => {
-      node.connect(this.biquadFilter)
-          .connect(this.gainNode)
-          .connect(this.audioCtx.destination);
+      node.connect(this.osc2gainNode)
+          .connect(this.biquadFilter);
     });
+
+    this.connect = this.biquadFilter.connect.bind(this.biquadFilter);
+    this.disconnect = this.biquadFilter.disconnect.bind(this.biquadFilter);
 
     Voice.addEventListener('osc1shapeChanged', () => {
 
@@ -103,7 +114,8 @@ export default class Voice extends Observable {
       this.osc2Nodes[i].start(whenTime);
     }
       
-    this.volumeADSR.noteOn(whenTime);
+    this.osc1volumeADSR.noteOn(whenTime);
+    this.osc2volumeADSR.noteOn(whenTime);
     this.filterADSR.noteOn(whenTime);
   }
   noteOff(whenTime = this.audioCtx.currentTime) {
@@ -112,7 +124,8 @@ export default class Voice extends Observable {
     // TODO: Trigger release envelope
     // Important! Setting a scheduled parameter value
     // this.gainNode.gain.cancelScheduledValues(whenTime);
-    this.volumeADSR.noteOff(whenTime);
+    this.osc1volumeADSR.noteOff(whenTime);
+    this.osc2volumeADSR.noteOff(whenTime);
     this.filterADSR.noteOff(whenTime);
     /* this.gainNode.gain.setValueAtTime(Voice.volume, whenTime);
     this.gainNode.gain.exponentialRampToValueAtTime(0.00001, whenTime + 3); */
@@ -125,7 +138,8 @@ export default class Voice extends Observable {
     // console.log("Stopping in: " + parseFloat(whenTime - this.audioCtx.currentTime));
     
     window.setTimeout(() => {
-      this.gainNode.disconnect();
+      this.osc1gainNode.disconnect();
+      this.osc2gainNode.disconnect();
       this.biquadFilter.disconnect();
       this.dispatchEvent('voiceDonePlaying');
     }, ((whenTime + Voice.volumeRelease) - this.audioCtx.currentTime) * 1000);
@@ -141,6 +155,7 @@ Voice.createObservableMember('osc1voices', 1);
 Voice.createObservableMember('osc1detune', 0);
 Voice.createObservableMember('osc1octave', 0);
 Voice.createObservableMember('osc1pitch', 0);
+Voice.createObservableMember('osc1volume', 1);
 
 Voice.createObservableMember('osc2shape', SHAPES.square);
 Voice.createObservableMember('osc2active', false);
@@ -148,6 +163,7 @@ Voice.createObservableMember('osc2voices', 1);
 Voice.createObservableMember('osc2detune', 0);
 Voice.createObservableMember('osc2octave', 0);
 Voice.createObservableMember('osc2pitch', 0);
+Voice.createObservableMember('osc2volume', 1);
 
 Voice.createObservableMember('volume', 0.1);
 Voice.createObservableMember('volumeAttack', 0);

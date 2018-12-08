@@ -54,6 +54,13 @@
           </option>
         </select>
       </label>
+      <label>
+        Volume
+        <vue-slider v-bind="sliderConfig.horizontal"
+                    v-model="osc.volume"
+                    :interval="0.001"
+                    :min="0" :max="1" />
+      </label>
     </fieldset>
     <fieldset>
       <legend>Filter</legend>
@@ -170,6 +177,7 @@ export default {
       detune: 0,
       octave: 0,
       pitch: 0,
+      volume: 1,
     }, {
       shape: SHAPES.square,
       active: false,
@@ -177,7 +185,9 @@ export default {
       detune: 0,
       octave: 0,
       pitch: 0,
+      volume: 1,
     }],
+    mainGainNode: null,
     filterCutoff: 22000,
     filterResonance: 0,
     volumeA: 0,
@@ -194,7 +204,33 @@ export default {
     verticalLow: 4,
     verticalHigh: 5,
   }),
+  computed: {
+    osc1active: self => self.oscillators[0].active,
+    osc1shape: self => self.oscillators[0].shape,
+    osc1voices: self => self.oscillators[0].voices,
+    osc1detune: self => self.oscillators[0].detune,
+    osc1octave: self => self.oscillators[0].octave,
+    osc1pitch: self => self.oscillators[0].pitch,
+    osc1volume: self => self.oscillators[0].volume,
+
+    osc2active: self => self.oscillators[1].active,
+    osc2shape: self => self.oscillators[1].shape,
+    osc2voices: self => self.oscillators[1].voices,
+    osc2detune: self => self.oscillators[1].detune,
+    osc2octave: self => self.oscillators[1].octave,
+    osc2pitch: self => self.oscillators[1].pitch,
+    osc2volume: self => self.oscillators[1].volume,
+  },
+  watch: {
+    volume(newValue, oldValue) {
+      this.mainGainNode.gain.setValueAtTime(newValue, this.audioCtx.currentTime);
+      console.log(this.mainGainNode.gain.value);
+      
+    }
+  },
   mounted () {
+    this.mainGainNode = this.audioCtx.createGain();
+    this.mainGainNode.connect(this.audioCtx.destination);
     const link = (sourceField, cls, destinationField, transformFunction) => {
       this.$watch(() => this[sourceField], () => {
         if(transformFunction) {
@@ -215,6 +251,7 @@ export default {
     link('osc1detune', Voice, 'osc1detune');
     link('osc1octave', Voice, 'osc1octave');
     link('osc1pitch', Voice, 'osc1pitch');
+    link('osc1volume', Voice, 'osc1volume');
 
     link('osc2active', Voice, 'osc2active');
     link('osc2shape', Voice, 'osc2shape');
@@ -222,6 +259,7 @@ export default {
     link('osc2detune', Voice, 'osc2detune');
     link('osc2octave', Voice, 'osc2octave');
     link('osc2pitch', Voice, 'osc2pitch');
+    link('osc2volume', Voice, 'osc2volume');
 
     link('filterCutoff', Voice, 'filterCutoff');
     link('filterResonance', Voice, 'filterResonance');
@@ -230,7 +268,6 @@ export default {
     link('filterD', Voice, 'filterDecay', val => Math.pow(val, 2));
     link('filterS', Voice, 'filterSustain', val => Math.pow(val, 2));
     link('filterR', Voice, 'filterRelease', val => Math.pow(val, 2));
-    link('volume', Voice, 'volume');
   },
   methods: {
     onKeyboardNoteOn({ pitch, id }) {
@@ -289,7 +326,6 @@ export default {
       Object.values(voices).forEach(voiceArray => {
         voiceArray.forEach(voice => {
           voice.noteOff();
-          console.log("Stopping voices for");
         });
         voiceArray.length = 0;
       });
@@ -301,6 +337,7 @@ export default {
       } else {
         voices[id] = [voice];
       }
+      voice.connect(this.mainGainNode);
       voice.noteOn(pitch, whenTime);
       voice.addEventListener('voiceDonePlaying', () => {
         voices[id] = voices[id].filter(v => v !== voice);
@@ -343,21 +380,6 @@ export default {
       this.noteOff('hello2', 50, this.audioCtx.currentTime + 2);
     }
   },
-  computed: {
-    osc1active: self => self.oscillators[0].active,
-    osc1shape: self => self.oscillators[0].shape,
-    osc1voices: self => self.oscillators[0].voices,
-    osc1detune: self => self.oscillators[0].detune,
-    osc1octave: self => self.oscillators[0].octave,
-    osc1pitch: self => self.oscillators[0].pitch,
-
-    osc2active: self => self.oscillators[1].active,
-    osc2shape: self => self.oscillators[1].shape,
-    osc2voices: self => self.oscillators[1].voices,
-    osc2detune: self => self.oscillators[1].detune,
-    osc2octave: self => self.oscillators[1].octave,
-    osc2pitch: self => self.oscillators[1].pitch,
-  }
 }
 window.Voice = Voice
 </script>
