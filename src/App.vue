@@ -224,13 +224,12 @@ export default {
   watch: {
     volume(newValue, oldValue) {
       this.mainGainNode.gain.setValueAtTime(newValue, this.audioCtx.currentTime);
-      console.log(this.mainGainNode.gain.value);
-      
-    }
+    },
   },
   mounted () {
     this.mainGainNode = this.audioCtx.createGain();
     this.mainGainNode.connect(this.audioCtx.destination);
+    this.mainGainNode.gain.setValueAtTime(this.volume, this.audioCtx.currentTime);
     const link = (sourceField, cls, destinationField, transformFunction) => {
       this.$watch(() => this[sourceField], () => {
         if(transformFunction) {
