@@ -173,7 +173,7 @@ export default {
   },
   data: () => ({
     notes: [],
-    sequencePosition: 0, // In seconds
+    sequencePosition: 0, // In bars
     sequenceCurrentLoop: 0,
     playing: false,
     lookahead: 0.1, // In seconds
@@ -201,7 +201,7 @@ export default {
   methods: {
     update_() {
       if(this.playing) {
-        const upcomingEvents = this.getUpcomingEvents(this.sequencePosition, this.lookahead);
+        const upcomingEvents = this.getUpcomingEvents(this.sequencePosition * this.secondsPerBar, this.lookahead);
         upcomingEvents.on.forEach(note => {
           const noteStartOffset = note.x * this.secondsPerSixteenthNote;
           let noteOnTime = noteStartOffset + this.sequenceLength * note.onTriggerCount;
@@ -219,9 +219,9 @@ export default {
 
         let dt = this.audioContext.currentTime - lastUpdate;
         lastUpdate = this.audioContext.currentTime;
-        this.sequencePosition += dt;
-        if(this.sequencePosition > this.sequenceLength) {
-          this.sequencePosition -= this.sequenceLength;
+        this.sequencePosition += dt / this.secondsPerBar;
+        if(this.sequencePosition > this.totalBars) {
+          this.sequencePosition -= this.totalBars;
           this.sequenceCurrentLoop++;
         }
       }
@@ -231,7 +231,7 @@ export default {
       /* If the note is placed while the sequencer is playing, add 1
          if the note is placed behind the playhead,
          to signal "note has already triggered this playthrough". */ 
-      const bonus = x * this.secondsPerSixteenthNote > this.sequencePosition ? 0 : 1;
+      const bonus = x / 16 > this.sequencePosition ? 0 : 1;
       const newNote = {
         id: generateNoteId(),
         pitch: y,
@@ -461,21 +461,11 @@ export default {
       });
     }
   },
-  watch: {
-    bpm(newBPM, oldBPM) {
-      if(newBPM > oldBPM) {
-        this.sequencePosition = (oldBPM / newBPM) * this.sequencePosition;
-      } else {
-        this.stop();
-        this.play();
-      }
-    }
-  },
   computed: {
-    playheadPosition: self => (self.sequencePosition / self.sequenceLength - self.viewportStart / self.totalBars) / self.numBarsVisibleInViewport * self.totalBars,
+    playheadPosition: self => (self.sequencePosition / self.totalBars - self.viewportStart / self.totalBars) / self.numBarsVisibleInViewport * self.totalBars,
     secondsPerSixteenthNote: self => 60 / self.bpm / 4,
     secondsPerBar: self => self.secondsPerSixteenthNote * 16,
-    sequenceLength: self => self.secondsPerBar * self.totalBars,
+    sequenceLength: self => self.secondsPerBar * self.totalBars, // In seconds
     totalBars: self => 4,
 
     numOctavesVisibleInViewport: self => self.octaveEnd - self.octaveStart,
