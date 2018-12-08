@@ -151,9 +151,6 @@ export default {
       default: 120,
       required: true,
     },
-
-
-
     viewportStart: {
       type: Number,
       default: 0,
@@ -178,7 +175,6 @@ export default {
     playing: false,
     lookahead: 0.1, // In seconds
     notesInHand: [],
-    // selection: { top: 0, left: 0, bottom: 0, right: 0 },
     selection: new SelectionRect(0, 0),
     selecting: false,
     width: 1,
@@ -188,6 +184,21 @@ export default {
       duration: 1 / 16 // In bars
     }
   }),
+  computed: {
+    // Number between 0 and 1, representing where in the viewport the playhead is
+    playheadPosition: self => (self.sequencePosition / self.totalBars - self.viewportStart / self.totalBars) / self.numBarsVisibleInViewport * self.totalBars,
+    secondsPerSixteenthNote: self => 60 / self.bpm / 4,
+    secondsPerBar: self => self.secondsPerSixteenthNote * 16,
+    sequenceDuration: self => self.secondsPerBar * self.totalBars, // In seconds
+    totalBars: self => 4,
+
+    numOctavesVisibleInViewport: self => self.octaveEnd - self.octaveStart,
+    numBarsVisibleInViewport: self => self.viewportEnd - self.viewportStart,
+
+    barWidth: self => 100 / self.numBarsVisibleInViewport,
+    noteWidth: self => 100 / (self.numBarsVisibleInViewport * 16),
+    noteHeight: self => 100 / (self.numOctavesVisibleInViewport * 12),
+  },
   mounted() {
     this.$nextTick(() => {
       this.width = parseInt(window.getComputedStyle(this.$el).width, 10);
@@ -204,14 +215,14 @@ export default {
         const upcomingEvents = this.getUpcomingEvents(this.sequencePosition * this.secondsPerBar, this.lookahead);
         upcomingEvents.on.forEach(note => {
           const noteStartOffset = note.x * this.secondsPerSixteenthNote;
-          let noteOnTime = noteStartOffset + this.sequenceLength * note.onTriggerCount;
+          let noteOnTime = noteStartOffset + this.sequenceDuration * note.onTriggerCount;
           noteOnTime += sequenceStartTime;
           note.onTriggerCount++;
           this.$emit('noteOn', { note, whenTime: noteOnTime });
         });
         upcomingEvents.off.forEach(note => {
           const noteEndOffset = note.x * this.secondsPerSixteenthNote + this.secondsPerSixteenthNote * 16 * note.duration;
-          let noteOffTime = noteEndOffset + this.sequenceLength * note.offTriggerCount;
+          let noteOffTime = noteEndOffset + this.sequenceDuration * note.offTriggerCount;
           noteOffTime += sequenceStartTime;
           note.offTriggerCount++;
           this.$emit('noteOff', { note, whenTime: noteOffTime });
@@ -269,9 +280,9 @@ export default {
         }
       }
 
-      const overshoot = timeInSequence + lookahead - this.sequenceLength;
+      const overshoot = timeInSequence + lookahead - this.sequenceDuration;
       if(overshoot > 0) {
-        const eventsAtEnd = getEventsInInterval(timeInSequence, this.sequenceLength);
+        const eventsAtEnd = getEventsInInterval(timeInSequence, this.sequenceDuration);
         const eventsAtStart = getEventsInInterval(0, overshoot, 1);
         upcomingEvents.on.push(...eventsAtEnd.on);
         upcomingEvents.on.push(...eventsAtStart.on);
@@ -460,20 +471,6 @@ export default {
         this.placeNote(note.x, note.y);
       });
     }
-  },
-  computed: {
-    playheadPosition: self => (self.sequencePosition / self.totalBars - self.viewportStart / self.totalBars) / self.numBarsVisibleInViewport * self.totalBars,
-    secondsPerSixteenthNote: self => 60 / self.bpm / 4,
-    secondsPerBar: self => self.secondsPerSixteenthNote * 16,
-    sequenceLength: self => self.secondsPerBar * self.totalBars, // In seconds
-    totalBars: self => 4,
-
-    numOctavesVisibleInViewport: self => self.octaveEnd - self.octaveStart,
-    numBarsVisibleInViewport: self => self.viewportEnd - self.viewportStart,
-
-    barWidth: self => 100 / self.numBarsVisibleInViewport,
-    noteWidth: self => 100 / (self.numBarsVisibleInViewport * 16),
-    noteHeight: self => 100 / (self.numOctavesVisibleInViewport * 12),
   },
 }
 </script>
