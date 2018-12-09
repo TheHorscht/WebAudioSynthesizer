@@ -341,11 +341,12 @@ export default {
       voice.addEventListener('voiceDonePlaying', () => {
         voices[id] = voices[id].filter(v => v !== voice);
       });
+      return voice;
     },
     noteOff(id, pitch, whenTime) {
       if(id in voices && voices[id].length > 0) {
         let voice = voices[id][voices[id].length - 1];
-        voice.noteOff(whenTime);
+        voice.noteOff(whenTime);        
       }
     },
     togglePlaying() {
@@ -365,18 +366,6 @@ export default {
       });
     },
     test() {
-      /* const bla = new Voice(this.audioCtx);
-      bla.noteOn(40, this.audioCtx.currentTime + 2);
-      bla.noteOff(40, this.audioCtx.currentTime + 1); */
-
-      /* const bla = new ADSR(1, this.audioCtx);
-      bla.noteOn(this.audioCtx.currentTime);
-      bla.noteOff(this.audioCtx.currentTime - 1); */
-
-      // TODO: Fix this crash:
-      // Crash when scheduling a stop when its already started and then calling stopAllNotes()
-      this.noteOn('hello2', 50, this.audioCtx.currentTime);
-      this.noteOff('hello2', 50, this.audioCtx.currentTime + 2);
     }
   },
 }
