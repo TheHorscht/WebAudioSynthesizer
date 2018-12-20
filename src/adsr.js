@@ -8,6 +8,7 @@ export default class ADSR {
     this.release = 0.5
     this.tension = 0.2
     this.amplitude = amplitude
+    this.started = false
     this.connect = this.constantSource.connect.bind(this.constantSource)
   }
   noteOn(whenTime) {    
@@ -15,7 +16,10 @@ export default class ADSR {
     this.constantSource.offset.setValueAtTime(0, whenTime)
     this.constantSource.offset.setTargetAtTime(this.amplitude, whenTime, this.tension * this.attack);
     this.constantSource.offset.setTargetAtTime(this.amplitude * this.sustain, whenTime + this.attack, this.tension * this.decay);
-    this.constantSource.start(whenTime)
+    if(!this.started) {
+      this.constantSource.start(whenTime)
+      this.started = true
+    }
   }
   noteOff(whenTime) {
     // this.constantSource.offset.cancelScheduledValues(whenTime);
